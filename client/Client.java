@@ -14,6 +14,7 @@ public abstract class Client {
 
 	/**
 	 * Swing components for the GUI.
+	 * @author Mike
 	 */
 	protected JFrame frame;
 	protected JTextArea output;
@@ -26,6 +27,7 @@ public abstract class Client {
 	
 	/**
 	 * Base Client constructor.
+	 * @author Mike
 	 */
 	public Client(String host, int port) {
 		this.host = host;
@@ -36,12 +38,15 @@ public abstract class Client {
 	 * Subclasses must implement createGUI().
 	 * Chatroom and P2P will have different implementations so this
 	 * can't be implemented here.
+	 * @author Mike
 	 */
 	public abstract void createGUI();
+	
 	/**
 	 * Subclasses must implement setUp().
 	 * Chatroom and P2P will have different implementations so this
 	 * can't be implemented here.
+	 * @author Mike
 	 */
 	public abstract void setUp() throws Exception;
 	

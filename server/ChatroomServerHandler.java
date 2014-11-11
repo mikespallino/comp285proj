@@ -26,8 +26,8 @@ public class ChatroomServerHandler extends ServerHandler {
 	@Override
 	public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
 		message = "[" + ctx.channel().remoteAddress() + "] has joined MAD Chat!";
-		getChannels().add(ctx.channel());
-		for(Channel channel : getChannels()) {
+		channels.add(ctx.channel());
+		for(Channel channel : channels) {
 			channel.writeAndFlush("[SERVER] : [" + ctx.channel().remoteAddress() + "] has joined MAD Chat!\t" + getUsers() + "\r\n");
 		}
 	}
@@ -41,10 +41,10 @@ public class ChatroomServerHandler extends ServerHandler {
 	@Override
 	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
 		message = "[" + ctx.channel().remoteAddress() + "] has left MAD Chat!";
-		for(Channel channel : getChannels()) {
+		for(Channel channel : channels) {
 			channel.writeAndFlush("[SERVER] : [" + ctx.channel().remoteAddress() + "] has left MAD Chat!\t" + getUsers() + "\r\n");
 		}
-		getChannels().remove(ctx.channel());
+		channels.remove(ctx.channel());
 	}
 
 	/**
@@ -56,7 +56,7 @@ public class ChatroomServerHandler extends ServerHandler {
 	@Override
 	public void channelRead0(ChannelHandlerContext ctx, String message) throws Exception {
 		this.message = "[" + ctx.channel().remoteAddress() + "] : " + message;
-		for(Channel c: getChannels()) {
+		for(Channel c: channels) {
 			if(c != ctx.channel()) {
 				c.writeAndFlush("[" + ctx.channel().remoteAddress() + "] : " + message + "\r\n");
 	 		} else {
@@ -66,18 +66,39 @@ public class ChatroomServerHandler extends ServerHandler {
 		
 	}
 
+	/**
+	 * getMessage()
+	 * @return message - The message received from the clients by the server.
+	 * @author Mike
+	 */
 	public String getMessage() {
 		return message;
 	}
 
+	/**
+	 * resetMessage()
+	 * Sets the message received by clients to the empty string.
+	 * This way the Server GUI knows when to not append data to the output.
+	 * @author Mike
+	 */
 	public void resetMessage() {
 		message = "";
 	}
 
+	/**
+	 * getChannels()
+	 * @return channels - The working list of clients connected to the server.
+	 * @author Mike
+	 */
 	public static ChannelGroup getChannels() {
 		return channels;
 	}
 	
+	/**
+	 * getUsers()
+	 * @return temp - A string of concatenated remote addresses of the clients connected to the server.
+	 * @author Mike
+	 */
 	private String getUsers() {
 		String temp = "";
 		for(Channel c : channels) {

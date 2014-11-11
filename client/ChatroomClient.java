@@ -13,7 +13,6 @@ import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -35,7 +34,6 @@ import javax.swing.JTextField;
 public class ChatroomClient extends Client {
 
 	private boolean clicked = false;
-	
 	private Channel channel;
 	
 	public ChatroomClient(String host, int port) {

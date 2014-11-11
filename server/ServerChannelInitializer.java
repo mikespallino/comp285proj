@@ -27,10 +27,12 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
     }
 	
 	public void getMessage() {
-		for(ChatroomServerHandler handler: handlers) {
-			if(handler != null && handler.getMessage() != null && !handler.getMessage().equals("")) {
-				messages.add(handler.getMessage());
-				handler.resetMessage();
+		if(handlers != null) {
+			for(ChatroomServerHandler handler: handlers) {
+				if(handler != null && handler.getMessage() != null && !handler.getMessage().equals("")) {
+					messages.add(handler.getMessage());
+					handler.resetMessage();
+				}
 			}
 		}
 	}

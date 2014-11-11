@@ -2,11 +2,9 @@ package client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -15,6 +13,7 @@ import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,19 +27,16 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import server.ChatroomServerHandler;
-
 /**
  * ChatroomClient implementation.
  * Sets up connections to the main chat room.
  * @author Mike
  */
 public class ChatroomClient extends Client {
-	
-	private boolean exit = false;
+
+	private boolean clicked = false;
 	
 	private Channel channel;
-	private ChannelFuture future;
 	
 	public ChatroomClient(String host, int port) {
 		super(host, port);
@@ -86,7 +82,13 @@ public class ChatroomClient extends Client {
 
             // Start the client.
             channel = b.connect(host, port).sync().channel();
-            while(true) {            	
+            boolean firstRun = true;
+            while(true) {
+            	if(firstRun) {
+            		output.append("Welcome to MAD Chat!\nServer: " + handler.getServer().remoteAddress() + "\n");
+            		firstRun = false;
+            	}
+            	
             	 //Forces the scroll pane to actually scroll to the bottom when new data is put in
             	output.setCaretPosition(output.getDocument().getLength());
             	if(handler.getMessage() != null && !handler.getMessage().equals("")) {
@@ -94,22 +96,19 @@ public class ChatroomClient extends Client {
 	            	output.append("\n");
 	            	handler.resetMessage();
             	}
-            	/**
-            	String[] users = new String[ChatroomServerHandler.getChannels().size()];
-            	int k = 0;
-            	for(Channel c: ChatroomServerHandler.getChannels()) {
-            		if(k < users.length) {
-	            		users[k] = c.remoteAddress().toString();
-	            		k++;
-            		}
-            	}
-            	userList.setListData(users);*/
-            	if(exit) {
-            		break;
-            	}
+            	userList.setListData(ClientHandler.getUsers());
+            	if(clicked) {
+            		if(message.getText().equalsIgnoreCase("/bye")) {
+			            workerGroup.shutdownGracefully();
+			            message.setText("");
+			            System.exit(0);
+            		} else if(!message.getText().equals("")) {
+						channel.writeAndFlush(message.getText() + "\n");
+						message.setText("");
+						clicked = false;
+					}
+				}
             }
-            channel.closeFuture().sync();
-            future.sync();
         } finally {
             workerGroup.shutdownGracefully();
         }
@@ -131,6 +130,7 @@ public class ChatroomClient extends Client {
 		areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		areaScrollPane.setPreferredSize(new Dimension(500, 400));
 		message = new JTextField(20);
+		message.setActionCommand("Enter");
 		sendButton = new JButton("Send");
 		userList = new JList<String>();
 		String[] userListData = {"test", "test1", "test3"};
@@ -147,24 +147,18 @@ public class ChatroomClient extends Client {
 		sendButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				if(channel != null) {
-					if (message.getText().toLowerCase().equals("/bye")) {
-            			try {
-							channel.closeFuture().sync();
-							if(future != null) {
-								future.sync();
-							}
-							exit = true;
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					} else {
-						channel.writeAndFlush(message.getText() + "\r\n");
-					}
-					message.setText("");
-				}
+				clicked = true;
 			}
 			
+		});
+		
+		message.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if(arg0.getActionCommand().equals("Enter")) {
+					clicked = true;
+				}
+			}
 		});
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

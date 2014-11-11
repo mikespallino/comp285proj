@@ -8,6 +8,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
@@ -102,6 +104,9 @@ public class ChatroomServer extends Server {
 	public void createGUI() {
 		output = new JTextArea(20,40);
 		output.setEditable(false);
+		JScrollPane areaScrollPane = new JScrollPane(output);
+		areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		areaScrollPane.setPreferredSize(new Dimension(500, 400));
 		message = new JTextField(20);
 		sendButton = new JButton("Send");
 		userList = new JList<String>();
@@ -137,7 +142,7 @@ public class ChatroomServer extends Server {
 				layout.createSequentialGroup()
 					.addGroup(
 						layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-							.addComponent(output, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+							.addComponent(areaScrollPane, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 							.addComponent(message, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 					.addGap(10)
 					.addGroup(
@@ -149,7 +154,7 @@ public class ChatroomServer extends Server {
 				layout.createSequentialGroup()
 					.addGroup(
 						layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-							.addComponent(output, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+							.addComponent(areaScrollPane, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 							.addComponent(userList, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 					.addGap(10)
 					.addGroup(

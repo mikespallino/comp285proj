@@ -25,11 +25,11 @@ public class ChatroomServerHandler extends ServerHandler {
 	 */
 	@Override
 	public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-		message = ctx.channel().remoteAddress() + " has joined MAD Chat!";
-		for(Channel channel : getChannels()) {
-			channel.write("[SERVER] : " + ctx.channel().remoteAddress() + " has joined MAD Chat!\r\n");
-		}
+		message = "[" + ctx.channel().remoteAddress() + "] has joined MAD Chat!";
 		getChannels().add(ctx.channel());
+		for(Channel channel : getChannels()) {
+			channel.writeAndFlush("[SERVER] : [" + ctx.channel().remoteAddress() + "] has joined MAD Chat!\t" + getUsers() + "\r\n");
+		}
 	}
 	
 	/**
@@ -40,9 +40,9 @@ public class ChatroomServerHandler extends ServerHandler {
 	 */
 	@Override
 	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-		message = ctx.channel().remoteAddress() + " has left MAD Chat!";
+		message = "[" + ctx.channel().remoteAddress() + "] has left MAD Chat!";
 		for(Channel channel : getChannels()) {
-			channel.write("[SERVER] : " + ctx.channel().remoteAddress() + " has left MAD Chat!\r\n");
+			channel.writeAndFlush("[SERVER] : [" + ctx.channel().remoteAddress() + "] has left MAD Chat!\t" + getUsers() + "\r\n");
 		}
 		getChannels().remove(ctx.channel());
 	}
@@ -76,6 +76,14 @@ public class ChatroomServerHandler extends ServerHandler {
 
 	public static ChannelGroup getChannels() {
 		return channels;
+	}
+	
+	private String getUsers() {
+		String temp = "";
+		for(Channel c : channels) {
+				temp += "[" + c.remoteAddress() + "] ";
+		}
+		return temp;
 	}
 	
 }

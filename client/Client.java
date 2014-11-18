@@ -3,6 +3,7 @@ package client;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
@@ -18,6 +19,8 @@ public abstract class Client {
 	 */
 	protected JFrame frame;
 	protected JTextArea output;
+	protected JScrollPane areaScrollPane;
+	protected JScrollPane userListScrollPane;
 	protected JTextField message;
 	protected JButton sendButton;
 	protected JList<String> userList;

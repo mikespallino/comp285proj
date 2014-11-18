@@ -30,6 +30,7 @@ import javax.swing.JTextField;
 public class ChatroomServer extends Server {
 
 	private boolean exit = false;
+	private boolean clicked = false;
 	
     public ChatroomServer(int port) {
 		super(port);
@@ -81,6 +82,21 @@ public class ChatroomServer extends Server {
             		}
             		initializer.resetMessages();
             	}
+            	if(clicked) {
+            		if(message.getText().equalsIgnoreCase("/bye")) {
+			            workerGroup.shutdownGracefully();
+			            message.setText("");
+			            clicked = false;
+			            System.exit(0);
+            		} else if(!message.getText().equals("")) {
+            			output.append(message.getText() + "\r\n");
+            			for(Channel channel: ChatroomServerHandler.getChannels()) {
+            				channel.writeAndFlush("[SERVER] : " + message.getText() + "\r\n");
+                    	}
+						message.setText("");
+						clicked = false;
+					}
+				}
             	if(exit) {
             		break;
             	}
@@ -108,6 +124,7 @@ public class ChatroomServer extends Server {
 		areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		areaScrollPane.setPreferredSize(new Dimension(500, 400));
 		message = new JTextField(20);
+		message.setActionCommand("Enter");
 		sendButton = new JButton("Send");
 		userList = new JList<String>();
 		String[] userListData = {"test", "test1", "test3"};
@@ -124,9 +141,18 @@ public class ChatroomServer extends Server {
 		sendButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				//TODO: implement.
+				clicked = true;
 			}
 			
+		});
+		
+		message.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if(arg0.getActionCommand().equals("Enter")) {
+					clicked = true;
+				}
+			}
 		});
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

@@ -150,8 +150,9 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 		users = message.substring(userListStart);	
 		int addressLength = userLength(users);
 		for(int i = 2; i < users.length(); i+=(addressLength+3)) {
+			System.out.println(users.substring(i, i+addressLength));
 			if(i+addressLength < users.length()) {
-				//addressLength = userLength(users.substring(i, i+addressLength));
+				addressLength = userLength(users.substring(i, i+addressLength));
 				String temp = users.substring(i, i+addressLength);
 				boolean newUser = true;
 				for(int j = 0; j < userList.size(); j++) {
@@ -161,8 +162,6 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 				}
 				if(newUser) {
 					userList.add(users.substring(i, i+addressLength));
-				} else {
-					newUser = true;
 				}
 			}
 		}

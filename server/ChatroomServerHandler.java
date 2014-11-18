@@ -55,15 +55,32 @@ public class ChatroomServerHandler extends ServerHandler {
 	 */
 	@Override
 	public void channelRead0(ChannelHandlerContext ctx, String message) throws Exception {
-		this.message = "[" + ctx.channel().remoteAddress() + "] : " + message;
-		for(Channel c: channels) {
-			if(c != ctx.channel()) {
-				c.writeAndFlush("[" + ctx.channel().remoteAddress() + "] : " + message + "\r\n");
-	 		} else {
-	 			c.writeAndFlush("[you] : " + message + "\r\n");
-	 		}
-	 	}
-		
+		if(message.indexOf("[P2P]") == -1) {
+			this.message = "[" + ctx.channel().remoteAddress() + "] : " + message;
+			for(Channel c: channels) {
+				if(c != ctx.channel()) {
+					c.writeAndFlush("[" + ctx.channel().remoteAddress() + "] : " + message + "\r\n");
+		 		} else {
+		 			c.writeAndFlush("[you] : " + message + "\r\n");
+		 		}
+		 	}
+		} else {
+			int startFrom = 14;
+			int endFrom = message.indexOf(']', startFrom);
+			String userFrom = message.substring(startFrom, endFrom);
+			int startTo = message.indexOf("TO : [") + 6;
+			int endTo = message.indexOf(']', startTo);
+			String userTo = message.substring(startTo, endTo);
+			String msg = message.substring(endTo+1);
+			for(Channel c: channels) {
+				if(c.remoteAddress().toString().equals(userTo)) {
+					c.writeAndFlush("[P2P] [" + ctx.channel().remoteAddress() + "] : " + msg + "\r\n");
+				}
+				if(c.remoteAddress().toString().equals(userFrom)) {
+					c.writeAndFlush("[you] : " + msg + "\r\n");
+				}
+			}
+		}
 	}
 
 	/**

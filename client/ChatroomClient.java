@@ -35,6 +35,7 @@ public class ChatroomClient extends Client {
 
 	private boolean clicked = false;
 	private Channel channel;
+	Thread display;
 	
 	public ChatroomClient(String host, int port) {
 		super(host, port);
@@ -87,6 +88,7 @@ public class ChatroomClient extends Client {
             		firstRun = false;
             	}
             	
+            	
             	 //Forces the scroll pane to actually scroll to the bottom when new data is put in
             	output.setCaretPosition(output.getDocument().getLength());
             	if(handler.getMessage() != null && !handler.getMessage().equals("")) {
@@ -101,7 +103,7 @@ public class ChatroomClient extends Client {
 			            message.setText("");
 			            System.exit(0);
             		} else if(!message.getText().equals("")) {
-						channel.writeAndFlush(message.getText() + "\n");
+						channel.writeAndFlush(message.getText() + "\r\n");
 						message.setText("");
 						clicked = false;
 					}
@@ -124,7 +126,7 @@ public class ChatroomClient extends Client {
 		output.setEditable(false);
 		output.setLineWrap(true);
 		output.setWrapStyleWord(true);
-		JScrollPane areaScrollPane = new JScrollPane(output);
+		areaScrollPane = new JScrollPane(output);
 		areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		areaScrollPane.setPreferredSize(new Dimension(500, 400));
 		message = new JTextField(20);
@@ -133,6 +135,10 @@ public class ChatroomClient extends Client {
 		userList = new JList<String>();
 		String[] userListData = {"test", "test1", "test3"};
 		userList.setListData(userListData);
+		
+		userListScrollPane = new JScrollPane(userList);
+		userListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		userListScrollPane.setPreferredSize(new Dimension(100, 400));
 		
 		frame = new JFrame("MAD Chat");
 		JPanel panel = new JPanel();
@@ -193,7 +199,6 @@ public class ChatroomClient extends Client {
 		frame.add(panel);
 		frame.setResizable(false);
 		frame.setLocationRelativeTo(null);
-		frame.pack();
 		frame.setVisible(true);
 	}
 }

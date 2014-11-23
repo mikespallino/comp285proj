@@ -65,9 +65,6 @@ public class ChatroomServerHandler extends ServerHandler {
 		 		}
 		 	}
 		} else {
-			int startFrom = 14;
-			int endFrom = message.indexOf(']', startFrom);
-			String userFrom = message.substring(startFrom, endFrom);
 			int startTo = message.indexOf("TO : [") + 6;
 			int endTo = message.indexOf(']', startTo);
 			String userTo = message.substring(startTo, endTo);
@@ -75,9 +72,6 @@ public class ChatroomServerHandler extends ServerHandler {
 			for(Channel c: channels) {
 				if(c.remoteAddress().toString().equals(userTo)) {
 					c.writeAndFlush("[P2P] [" + ctx.channel().remoteAddress() + "] : " + msg + "\r\n");
-				}
-				if(c.remoteAddress().toString().equals(userFrom)) {
-					c.writeAndFlush("[P2P] [you] : " + msg + "\r\n");
 				}
 			}
 		}

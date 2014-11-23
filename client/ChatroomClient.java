@@ -99,12 +99,20 @@ public class ChatroomClient extends Client {
             	 //Forces the scroll pane to actually scroll to the bottom when new data is put in
             	output.setCaretPosition(output.getDocument().getLength());
             	if(handler.getMessage() != null && !handler.getMessage().equals("")) {
+            		//test
+            		if(handler.getMessage().substring(0,4).equals("[you]")) {
+            			System.out.println("Error.");
+            		}
             		//send message as usual
             		if(handler.getMessage().indexOf("[P2P]") == -1) {
             			output.append(handler.getMessage() + "\n");
             			System.out.println("setUp (loop):: message: " + handler.getMessage());
     	            	handler.resetMessage();
             		} else {
+            			//test
+            			if(handler.getMessage().indexOf("[P2P] [you]") != -1) {
+                			System.out.println("Error.");
+                		}
             			//send message to P2P window
             			boolean newP2P = true;
             			String peerAddress = handler.getMessage().substring(6, handler.getMessage().indexOf(":", 6));
@@ -198,6 +206,7 @@ public class ChatroomClient extends Client {
 							System.out.println("actionPerformed (list listener):: " + userList.getSelectedValue());
 							String peerAddress = userList.getSelectedValue().substring(1, userList.getSelectedValue().indexOf(":", 1));
 							new P2PClient(peerAddress, ChatroomClient.this);
+							userFrame.dispose();
 						}
 					}
 				});
@@ -275,5 +284,9 @@ public class ChatroomClient extends Client {
 			userListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 			userListScrollPane.setPreferredSize(new Dimension(200, 400));
 		}
+	}
+	
+	public Channel getChannel() {
+		return channel;
 	}
 }

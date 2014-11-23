@@ -45,6 +45,7 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 	 */
 	public void getMessage() {
 		if(handlers != null) {
+			//Iterator it = handlers.iterator();
 			for(ChatroomServerHandler handler: handlers) {
 				if(handler != null && handler.getMessage() != null && !handler.getMessage().equals("")) {
 					messages.add(handler.getMessage());

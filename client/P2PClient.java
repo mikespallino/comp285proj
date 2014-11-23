@@ -32,11 +32,15 @@ public class P2PClient extends Client {
 	protected void createGUI() {
 		frame = new JFrame("MAD P2P Chat: " + host);
 		output = new JTextArea(20,20);
+		output.setEditable(false);
 		message = new JTextField(40);
+		message.setActionCommand("Enter");
 		sendButton = new JButton("Send");
 		areaScrollPane = new JScrollPane(output);
 		areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		areaScrollPane.setPreferredSize(new Dimension(600, 400));
+		
+		output.append("Welcome to MAD P2P chat!\nYou are speaking with: " + host + "\n");
 		
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JPanel panel = new JPanel();		
@@ -69,7 +73,8 @@ public class P2PClient extends Client {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				if(arg0.getActionCommand().equals("Enter") && message.getText() != null && !message.getText().equals("")) {
-					chatroom.sendMessage(message.getText());
+					chatroom.sendMessage("[P2P] FROM : [" + chatroom.getChannel().localAddress() + "] TO : [" + host + "] "+ message.getText() + "\r\n");
+					output.append("[you] : " +  message.getText() + "\n");
 					message.setText("");
 				}
 			}
@@ -79,7 +84,8 @@ public class P2PClient extends Client {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				if(message.getText() != null && !message.getText().equals("")) {
-					chatroom.sendMessage(message.getText());
+					chatroom.sendMessage("[P2P] FROM : [" + chatroom.getChannel().localAddress() + "] TO : [" + host + "] "+ message.getText() + "\r\n");
+					output.append("[you] : " +  message.getText() + "\n");
 					message.setText("");
 				}
 			}

@@ -50,6 +50,7 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 				if(handler != null && handler.getMessage() != null && !handler.getMessage().equals("")) {
 					messages.add(handler.getMessage());
 					handler.resetMessage();
+					System.out.println("removed.");
 				}
 			}
 		}

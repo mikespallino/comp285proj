@@ -55,26 +55,35 @@ public class ChatroomServerHandler extends ServerHandler {
 	 */
 	@Override
 	public void channelRead0(ChannelHandlerContext ctx, String message) throws Exception {
-		if(message.indexOf("[P2P]") == -1) {
-			this.message = "[" + ctx.channel().remoteAddress() + "] : " + message;
-			for(Channel c: channels) {
-				if(c != ctx.channel()) {
-					c.writeAndFlush("[" + ctx.channel().remoteAddress() + "] : " + message + "\r\n");
-		 		} else {
-		 			c.writeAndFlush("[you] : " + message + "\r\n");
-		 		}
-		 	}
+		System.out.println("channelRead0 (before):: " + message);
+		if(message.equals("")) {
+			System.out.println("Error: Wrote empty string. " + ctx.channel().remoteAddress());
 		} else {
-			int startTo = message.indexOf("TO : [") + 6;
-			int endTo = message.indexOf(']', startTo);
-			String userTo = message.substring(startTo, endTo);
-			String msg = message.substring(endTo+1);
-			for(Channel c: channels) {
-				if(c.remoteAddress().toString().equals(userTo)) {
-					c.writeAndFlush("[P2P] [" + ctx.channel().remoteAddress() + "] : " + msg + "\r\n");
+			if(!message.startsWith("[P2P]")) {
+				System.out.println("channelRead0 (not P2P):: true");
+				this.message = "[" + ctx.channel().remoteAddress() + "] : " + message;
+				for(Channel c: channels) {
+					if(c != ctx.channel()) {
+						c.writeAndFlush("[" + ctx.channel().remoteAddress() + "] : " + message + "\r\n");
+			 		} else {
+			 			c.writeAndFlush("[you] : " + message + "\r\n");
+			 		}
+			 	}
+			} else {
+				int startTo = message.indexOf("TO : [") + 6;
+				int endTo = message.indexOf(']', startTo);
+				String userTo = message.substring(startTo, endTo);
+				String msg = message.substring(endTo+1);
+				for(Channel c: channels) {
+					if(c.remoteAddress().toString().equals(userTo)) {
+						this.message = "[P2P] [" + ctx.channel().remoteAddress() + "] : " + msg;
+						System.out.println("channelRead0 (P2P):: " + "[P2P] [" + ctx.channel().remoteAddress() + "] : " + msg + "\r\n");
+						c.writeAndFlush(this.message + "\r\n");
+					}
 				}
 			}
 		}
+		System.out.println("channelRead0 (end):: " + message);
 	}
 
 	/**

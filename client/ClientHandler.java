@@ -68,11 +68,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 				}
 			}
 		}
-		if(this.message.substring(0,6).equals("[you] :")) {
-			System.out.println("Error: client handler.");
-		}
 		System.out.println("channelRead0:: Message: " + this.message);
-		System.out.println("channelRead0:: Done.");
 	}
 
 	/**

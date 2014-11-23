@@ -23,7 +23,6 @@ public abstract class Client {
 	protected JScrollPane userListScrollPane;
 	protected JTextField message;
 	protected JButton sendButton;
-	protected JList<String> userList;
 	
 	protected String host;
 	protected int port;
@@ -37,20 +36,24 @@ public abstract class Client {
 		this.port = port;
 	}
 	
+	public Client(String host, ChatroomClient c) {
+		this.host = host;
+	}
+	
 	/**
 	 * Subclasses must implement createGUI().
 	 * Chatroom and P2P will have different implementations so this
 	 * can't be implemented here.
 	 * @author Mike
 	 */
-	public abstract void createGUI();
+	protected abstract void createGUI();
 	
-	/**
-	 * Subclasses must implement setUp().
-	 * Chatroom and P2P will have different implementations so this
-	 * can't be implemented here.
-	 * @author Mike
-	 */
-	public abstract void setUp() throws Exception;
+	protected void append(String msg) {
+		output.append(msg + "\n");
+	}
+	
+	public String getHost() {
+		return host;
+	}
 	
 }

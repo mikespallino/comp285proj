@@ -54,20 +54,22 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
      */
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, String message) throws Exception {
+		this.message = message;
 		if(message.indexOf("has joined MAD Chat!") != -1) {
-			parseEndOfMessage(message);
-		} else if(message.indexOf("has left MAD Chat!") != -1) {
 			this.message = message.substring(0, message.indexOf("\t"));
+			String users = message.substring(message.indexOf("\t") + 1);
+			parseEndOfMessage(users);
+		} else if(message.indexOf("has left MAD Chat!") != -1) {
 			int index = 12;
-			String user = message.substring(index, index + userLength(message.substring(index)));
+			String user = message.substring(index, index + userLength(message.substring(index),11));
 			for(int i = 0; i < userList.size(); i++) {
 				if(userList.get(i).equals(user)) {
 					userList.remove(i);
 				}
 			}
-		} else {
-			this.message = message;
 		}
+		System.out.println("channelRead0:: Message: " + this.message);
+		System.out.println("channelRead0:: Done.");
 	}
 
 	/**
@@ -107,18 +109,16 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 	 * @return the length of the address between the brackets.
 	 * @author Mike
 	 */
-	private int userLength (String users) {
+	private int userLength(String users, int from) {
 		int start = 0;
 		int end = 0;
-		for(int i = 0; i < users.length(); i++) {
-			if(users.charAt(i) == '[') {
-				start = i + 1;
-			} else if(users.charAt(i) == ']') {
-				end = i;
-				break;
-			}
+		if(users.indexOf('[', from) != -1) {
+			start = users.indexOf('[', from);
 		}
-		return end-start;
+		if(users.indexOf(']', from) != -1) {
+			end = users.indexOf(']', from);
+		}
+		return end - start - 1;
 	}
 	
 	/**
@@ -143,17 +143,12 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 	 * It checks to make sure that the user isn't already in the user list before adding it to the ArrayList.
 	 * @author Mike
 	 */
-	private void parseEndOfMessage(String message) {
-		int userListStart = message.indexOf("\t");
-		String users = "";
-		this.message = message.substring(0, userListStart);
-		users = message.substring(userListStart);	
-		int addressLength = userLength(users);
-		for(int i = 2; i < users.length(); i+=(addressLength+3)) {
-			System.out.println(users.substring(i, i+addressLength));
+	private void parseEndOfMessage(String users) {	
+		int addressLength = -1;
+		for(int i = 0; i < users.length(); i+=(addressLength+3)) {
+			addressLength = userLength(users, i);
 			if(i+addressLength < users.length()) {
-				addressLength = userLength(users.substring(i, i+addressLength));
-				String temp = users.substring(i, i+addressLength);
+				String temp = users.substring(i+1, i+addressLength+1);
 				boolean newUser = true;
 				for(int j = 0; j < userList.size(); j++) {
 					if(temp.equals(userList.get(j))) {
@@ -161,7 +156,8 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 					}
 				}
 				if(newUser) {
-					userList.add(users.substring(i, i+addressLength));
+					userList.add(temp);
+					System.out.println("parseEndOfMessage:: Added " + temp);
 				}
 			}
 		}

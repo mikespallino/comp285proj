@@ -16,15 +16,23 @@ import io.netty.handler.codec.string.StringEncoder;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
+import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 /**
  * ChatroomClient implementation.
@@ -32,10 +40,12 @@ import javax.swing.JTextField;
  * @author Mike
  */
 public class ChatroomClient extends Client {
-
+	
 	private boolean clicked = false;
 	private Channel channel;
-	Thread display;
+	private JList<String> userList;
+	private DefaultListModel<String> list = new DefaultListModel<String>();
+	ArrayList<P2PClient> p2pClients = new ArrayList<>();
 	
 	public ChatroomClient(String host, int port) {
 		super(host, port);
@@ -44,7 +54,7 @@ public class ChatroomClient extends Client {
 	
     public static void main(String[] args) {
     	try {
-    		new ChatroomClient("127.0.0.1", 8080).setUp();
+    		new ChatroomClient("10.33.11.51", 8080).setUp();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -57,8 +67,7 @@ public class ChatroomClient extends Client {
      * Pulls data from the server
      * @author Mike
      */
-    @Override
-    public void setUp() throws Exception {
+    private void setUp() throws Exception {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
         try {
@@ -87,23 +96,43 @@ public class ChatroomClient extends Client {
             		output.append("Welcome to MAD Chat!\nServer: " + handler.getServer().remoteAddress() + "\n");
             		firstRun = false;
             	}
-            	
-            	
             	 //Forces the scroll pane to actually scroll to the bottom when new data is put in
             	output.setCaretPosition(output.getDocument().getLength());
             	if(handler.getMessage() != null && !handler.getMessage().equals("")) {
-	            	output.append(handler.getMessage());
-	            	output.append("\n");
-	            	handler.resetMessage();
+            		//send message as usual
+            		if(handler.getMessage().indexOf("[P2P]") == -1) {
+            			output.append(handler.getMessage() + "\n");
+            			System.out.println("setUp (loop):: message: " + handler.getMessage());
+    	            	handler.resetMessage();
+            		} else {
+            			//send message to P2P window
+            			boolean newP2P = true;
+            			String peerAddress = handler.getMessage().substring(6, handler.getMessage().indexOf(":", 6));
+            			for(int i = 0; i < p2pClients.size(); i++) {
+            				if(peerAddress.equals(p2pClients.get(i).getHost())) {
+            					newP2P = false;
+            					p2pClients.get(i).append(handler.getMessage());
+            				}
+            			}
+            			if(newP2P) { 
+            				p2pClients.add(new P2PClient(peerAddress, this));
+            				p2pClients.get(p2pClients.size() - 1).append(handler.getMessage());
+            				newP2P = false;
+            			}
+            		}
             	}
-            	userList.setListData(ClientHandler.getUsers());
+            	
+            	//update list
+            	updateList(ClientHandler.getUsers());
+            	
+            	//send data
             	if(clicked) {
             		if(message.getText().equalsIgnoreCase("/bye")) {
 			            workerGroup.shutdownGracefully();
 			            message.setText("");
 			            System.exit(0);
             		} else if(!message.getText().equals("")) {
-						channel.writeAndFlush(message.getText() + "\r\n");
+            			sendMessage(message.getText());
 						message.setText("");
 						clicked = false;
 					}
@@ -114,6 +143,10 @@ public class ChatroomClient extends Client {
         }
     }
 
+    public void sendMessage(String message) {
+    	channel.writeAndFlush(message +"\r\n");
+    }
+    
     /**
      * createGUI()
      * Builds the GUI using a GroupLayout layout manager.
@@ -128,20 +161,48 @@ public class ChatroomClient extends Client {
 		output.setWrapStyleWord(true);
 		areaScrollPane = new JScrollPane(output);
 		areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		areaScrollPane.setPreferredSize(new Dimension(500, 400));
+		areaScrollPane.setPreferredSize(new Dimension(600, 400));
 		message = new JTextField(20);
 		message.setActionCommand("Enter");
 		sendButton = new JButton("Send");
-		userList = new JList<String>();
-		String[] userListData = {"test", "test1", "test3"};
-		userList.setListData(userListData);
-		
+		userList = new JList<String>(list);
+		userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		userList.setLayoutOrientation(JList.VERTICAL);
 		userListScrollPane = new JScrollPane(userList);
 		userListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		userListScrollPane.setPreferredSize(new Dimension(100, 400));
+		userListScrollPane.setPreferredSize(new Dimension(200, 400));
 		
 		frame = new JFrame("MAD Chat");
 		JPanel panel = new JPanel();
+		
+		JMenuBar menuBar = new JMenuBar();
+		JMenu show = new JMenu("File");
+		JMenuItem showList = new JMenuItem("Show User List");
+		show.add(showList);
+		menuBar.add(show);
+		frame.setJMenuBar(menuBar);
+		
+		showList.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				JFrame userFrame = new JFrame("User List");
+				userFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				userFrame.add(userListScrollPane);
+				userFrame.pack();
+				userFrame.setLocationRelativeTo(frame);
+				userFrame.setVisible(true);
+				userList.addListSelectionListener(new ListSelectionListener() {
+					@Override
+					public void valueChanged(ListSelectionEvent arg0) {
+						if(arg0.getValueIsAdjusting() == false) {
+							System.out.println("actionPerformed (list listener):: " + userList.getSelectedValue());
+							String peerAddress = userList.getSelectedValue().substring(1, userList.getSelectedValue().indexOf(":", 1));
+							new P2PClient(peerAddress, ChatroomClient.this);
+						}
+					}
+				});
+			}
+		});
 		
 		/**
 		 * Anonymous class for the button action listener.
@@ -177,19 +238,17 @@ public class ChatroomClient extends Client {
 					.addGroup(
 						layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
 							.addComponent(areaScrollPane, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-							.addComponent(message, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-					.addGap(10)
-					.addGroup(
-						layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-							.addComponent(userList, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-							.addComponent(sendButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+							.addGroup(
+									layout.createSequentialGroup()
+										.addComponent(message, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+										.addGap(10)
+										.addComponent(sendButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))));
 		
 		layout.setVerticalGroup(
 				layout.createSequentialGroup()
 					.addGroup(
 						layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-							.addComponent(areaScrollPane, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-							.addComponent(userList, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+							.addComponent(areaScrollPane, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 					.addGap(10)
 					.addGroup(
 						layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
@@ -200,5 +259,21 @@ public class ChatroomClient extends Client {
 		frame.setResizable(false);
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
+	}
+	
+	private void updateList(String[] users) {
+		if(users.length != list.size()) {
+			list = new DefaultListModel<String>();
+			for(int i = 0; i < users.length; i++) {
+				System.out.println("updateList::User: " + users[i]);
+				list.addElement(users[i]);
+			}
+			userList = new JList<String>(list);
+			userList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+			userList.setLayoutOrientation(JList.VERTICAL);
+			userListScrollPane = new JScrollPane(userList);
+			userListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+			userListScrollPane.setPreferredSize(new Dimension(200, 400));
+		}
 	}
 }

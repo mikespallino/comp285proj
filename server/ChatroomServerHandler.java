@@ -42,7 +42,7 @@ public class ChatroomServerHandler extends ServerHandler {
 	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
 		message = "[" + ctx.channel().remoteAddress() + "] has left MAD Chat!";
 		for(Channel channel : channels) {
-			channel.writeAndFlush("[SERVER] : [" + ctx.channel().remoteAddress() + "] has left MAD Chat!\t" + getUsers() + "\r\n");
+			channel.writeAndFlush("[SERVER] : [" + ctx.channel().remoteAddress() + "] has left MAD Chat!\r\n");
 		}
 		channels.remove(ctx.channel());
 	}
@@ -77,7 +77,7 @@ public class ChatroomServerHandler extends ServerHandler {
 					c.writeAndFlush("[P2P] [" + ctx.channel().remoteAddress() + "] : " + msg + "\r\n");
 				}
 				if(c.remoteAddress().toString().equals(userFrom)) {
-					c.writeAndFlush("[you] : " + msg + "\r\n");
+					c.writeAndFlush("[P2P] [you] : " + msg + "\r\n");
 				}
 			}
 		}

@@ -122,7 +122,7 @@ public class ChatroomServer extends Server {
 		output.setEditable(false);
 		JScrollPane areaScrollPane = new JScrollPane(output);
 		areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		areaScrollPane.setPreferredSize(new Dimension(500, 400));
+		areaScrollPane.setPreferredSize(new Dimension(600, 400));
 		message = new JTextField(20);
 		message.setActionCommand("Enter");
 		sendButton = new JButton("Send");

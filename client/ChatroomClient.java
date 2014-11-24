@@ -54,7 +54,7 @@ public class ChatroomClient extends Client {
 	
     public static void main(String[] args) {
     	try {
-    		new ChatroomClient("10.33.11.51", 8080).setUp();
+    		new ChatroomClient("10.34.11.17", 8080).setUp();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -122,8 +122,9 @@ public class ChatroomClient extends Client {
             				}
             			}
             			if(newP2P) { 
+            				System.out.println("setUp (loop):: Starting client.");
             				p2pClients.add(new P2PClient(peerAddress, this));
-            				p2pClients.get(p2pClients.size() - 1).append(handler.getMessage());
+            				p2pClients.get(p2pClients.size() - 1).append("[PEER] : " + msg);
             				newP2P = false;
             			}
             			handler.resetMessage();
@@ -176,7 +177,7 @@ public class ChatroomClient extends Client {
 		areaScrollPane = new JScrollPane(output);
 		areaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		areaScrollPane.setPreferredSize(new Dimension(600, 400));
-		message = new JTextField(20);
+		message = new JTextField(40);
 		message.setActionCommand("Enter");
 		sendButton = new JButton("Send");
 		userList = new JList<String>(list);
@@ -209,9 +210,17 @@ public class ChatroomClient extends Client {
 					@Override
 					public void valueChanged(ListSelectionEvent arg0) {
 						if(arg0.getValueIsAdjusting() == false) {
+							boolean createNew = true;
 							System.out.println("actionPerformed (list listener):: " + userList.getSelectedValue());
 							String peerAddress = userList.getSelectedValue();
-							new P2PClient(peerAddress, ChatroomClient.this);
+							for(int i = 0; i < p2pClients.size(); i++) {
+								if(p2pClients.get(i).getHost().equals(peerAddress)) {
+									createNew = false;
+								}
+							}
+							if(createNew) {
+								p2pClients.add(new P2PClient(peerAddress, ChatroomClient.this));
+							}
 							userFrame.dispose();
 						}
 					}

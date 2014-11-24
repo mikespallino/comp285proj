@@ -111,6 +111,7 @@ public class ChatroomClient extends Client {
                 		}
             			//send message to P2P window
             			boolean newP2P = true;
+            			System.out.println(handler.getMessage());
             			String peerAddress = handler.getMessage().substring(13, handler.getMessage().indexOf("]"));
             			System.out.println("setUp (loop):: peerAddress: " + peerAddress);
             			for(int i = 0; i < p2pClients.size(); i++) {
@@ -137,6 +138,7 @@ public class ChatroomClient extends Client {
 			            message.setText("");
 			            System.exit(0);
             		} else if(!message.getText().equals("")) {
+            			System.out.println(1);
             			sendMessage(message.getText());
 						message.setText("");
 						clicked = false;

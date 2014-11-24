@@ -73,6 +73,7 @@ public class P2PClient extends Client {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				if(arg0.getActionCommand().equals("Enter") && message.getText() != null && !message.getText().equals("")) {
+					System.out.println(2);
 					chatroom.sendMessage("[P2P] FROM : [" + chatroom.getChannel().localAddress() + "] TO : [" + host + "] "+ message.getText() + "\r\n");
 					output.append("[you] : " +  message.getText() + "\n");
 					message.setText("");
@@ -84,6 +85,7 @@ public class P2PClient extends Client {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				if(message.getText() != null && !message.getText().equals("")) {
+					System.out.println(3);
 					chatroom.sendMessage("[P2P] FROM : [" + chatroom.getChannel().localAddress() + "] TO : [" + host + "] "+ message.getText() + "\r\n");
 					output.append("[you] : " +  message.getText() + "\n");
 					message.setText("");

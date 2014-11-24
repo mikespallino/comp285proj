@@ -57,7 +57,7 @@ public class ChatroomServerHandler extends ServerHandler {
 	public void channelRead0(ChannelHandlerContext ctx, String message) throws Exception {
 		System.out.println("channelRead0 (before):: " + message);
 		if(message.equals("")) {
-			System.out.println("Error: Wrote empty string. " + ctx.channel().remoteAddress());
+			System.out.println("Error: Wrote empty string. " + ctx.channel());
 		} else {
 			if(!message.startsWith("[P2P]")) {
 				System.out.println("channelRead0 (not P2P):: true");
@@ -70,15 +70,18 @@ public class ChatroomServerHandler extends ServerHandler {
 			 		}
 			 	}
 			} else {
+				int startFrom = message.indexOf("FROM : [") + 8;
+				int endFrom = message.indexOf(']', startFrom);
+				String userFrom = message.substring(startFrom, endFrom);
 				int startTo = message.indexOf("TO : [") + 6;
 				int endTo = message.indexOf(']', startTo);
 				String userTo = message.substring(startTo, endTo);
 				String msg = message.substring(endTo+1);
+				this.message = message;
 				for(Channel c: channels) {
 					if(c.remoteAddress().toString().equals(userTo)) {
-						this.message = "[P2P] [" + ctx.channel().remoteAddress() + "] : " + msg;
 						System.out.println("channelRead0 (P2P):: " + "[P2P] [" + ctx.channel().remoteAddress() + "] : " + msg + "\r\n");
-						c.writeAndFlush(this.message + "\r\n");
+						c.writeAndFlush("[P2P] FROM: [" + userFrom + "] TO : [" + userTo + "]\r\n");
 					}
 				}
 			}

@@ -112,12 +112,13 @@ public class ChatroomClient extends Client {
             			//send message to P2P window
             			boolean newP2P = true;
             			System.out.println(handler.getMessage());
-            			String peerAddress = handler.getMessage().substring(13, handler.getMessage().indexOf("]"));
+            			String peerAddress = handler.getMessage().substring(13, handler.getMessage().indexOf("]", 12));
             			System.out.println("setUp (loop):: peerAddress: " + peerAddress);
+            			String msg = handler.getMessage().substring(handler.getMessage().indexOf(":", handler.getMessage().indexOf("TO"))+1);
             			for(int i = 0; i < p2pClients.size(); i++) {
             				if(peerAddress.equals(p2pClients.get(i).getHost())) {
             					newP2P = false;
-            					p2pClients.get(i).append(handler.getMessage());
+            					p2pClients.get(i).append("[PEER] : " + msg);
             				}
             			}
             			if(newP2P) { 
@@ -125,6 +126,7 @@ public class ChatroomClient extends Client {
             				p2pClients.get(p2pClients.size() - 1).append(handler.getMessage());
             				newP2P = false;
             			}
+            			handler.resetMessage();
             		}
             	}
             	

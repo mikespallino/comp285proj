@@ -81,7 +81,7 @@ public class ChatroomServerHandler extends ServerHandler {
 				for(Channel c: channels) {
 					if(c.remoteAddress().toString().equals(userTo)) {
 						System.out.println("channelRead0 (P2P):: " + "[P2P] [" + ctx.channel().remoteAddress() + "] : " + msg + "\r\n");
-						c.writeAndFlush("[P2P] FROM: [" + userFrom + "] TO : [" + userTo + "]\r\n");
+						c.writeAndFlush("[P2P] FROM: [" + userFrom + "] TO : [" + userTo + "] : " + msg + "\r\n");
 					}
 				}
 			}

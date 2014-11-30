@@ -2,7 +2,6 @@ package client;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -36,6 +35,12 @@ public abstract class Client {
 		this.port = port;
 	}
 	
+	/**
+	 * P2P Client constructor.
+	 * @param host - String host name (ip address)
+	 * @param c - reference to the main chatroom client that was started.
+	 * @author Mike
+	 */
 	public Client(String host, ChatroomClient c) {
 		this.host = host;
 	}
@@ -48,10 +53,19 @@ public abstract class Client {
 	 */
 	protected abstract void createGUI();
 	
+	/**
+	 * Generic method to append text to the JTextArea.
+	 * @author Mike
+	 */
 	protected void append(String msg) {
 		output.append(msg + "\n");
 	}
 	
+	/**
+	 * Generic method to get the host name.
+	 * @return host
+	 * @author Mike
+	 */
 	public String getHost() {
 		return host;
 	}

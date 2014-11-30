@@ -28,6 +28,10 @@ public class P2PClient extends Client {
 		System.out.println("P2PClient:: created GUI");
 	}
 	
+	/**
+	 * createGUI()
+	 * creates the GUI for the P2P Client window.
+	 */
 	@Override
 	protected void createGUI() {
 		frame = new JFrame("MAD P2P Chat: " + host);
@@ -73,10 +77,7 @@ public class P2PClient extends Client {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				if(arg0.getActionCommand().equals("Enter") && message.getText() != null && !message.getText().equals("")) {
-					System.out.println(2);
-					chatroom.sendMessage("[P2P] FROM : [" + chatroom.getChannel().localAddress() + "] TO : [" + host + "] "+ message.getText() + "\r\n");
-					output.append("[you] : " +  message.getText() + "\n");
-					message.setText("");
+					sendMessage();
 				}
 			}
 		});
@@ -85,10 +86,7 @@ public class P2PClient extends Client {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				if(message.getText() != null && !message.getText().equals("")) {
-					System.out.println(3);
-					chatroom.sendMessage("[P2P] FROM : [" + chatroom.getChannel().localAddress() + "] TO : [" + host + "] "+ message.getText() + "\r\n");
-					output.append("[you] : " +  message.getText() + "\n");
-					message.setText("");
+					sendMessage();
 				}
 			}
 		});
@@ -99,4 +97,14 @@ public class P2PClient extends Client {
 		frame.setVisible(true);
 	}
 
+	/**
+	 * Sends a message to the chatroom object.
+	 * @author Mike
+	 */
+	private void sendMessage() {
+		chatroom.sendMessage("[P2P] FROM : [" + chatroom.getChannel().localAddress() + "] TO : [" + host + "] "+ message.getText() + "\r\n");
+		output.append("[you] : " +  message.getText() + "\n");
+		message.setText("");
+	}
+	
 }

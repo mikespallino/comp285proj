@@ -11,6 +11,11 @@ import io.netty.channel.SimpleChannelInboundHandler;
  */
 public abstract class ServerHandler extends SimpleChannelInboundHandler<String> {
 	
+	/**
+	 * Catches exceptions, prints the stack trace,
+	 * and closes the channel handler.
+	 * @author Mike
+	 */
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		 cause.printStackTrace();

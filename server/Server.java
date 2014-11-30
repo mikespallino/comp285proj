@@ -14,6 +14,7 @@ public abstract class Server {
 
 	/**
 	 * Swing components for the GUI.
+	 * @author Mike
 	 */
 	protected int port;
 	protected JFrame frame;
@@ -24,6 +25,7 @@ public abstract class Server {
 	
 	/**
 	 * Base Server constructor.
+	 * @author Mike
 	 */
 	public Server(int port) {
 		this.port = port;
@@ -32,14 +34,13 @@ public abstract class Server {
 	
 	/**
 	 * Subclasses must implement run().
-	 * Chatroom and P2P will have different implementations so this
-	 * can't be implemented here.
+	 * @author Mike
 	 */
 	public abstract void run() throws Exception;
+	
 	/**
 	 * Subclasses must implement createGUI().
-	 * Chatroom and P2P will have different implementations so this
-	 * can't be implemented here.
+	 * @author Mike
 	 */
 	public abstract void createGUI();
 	

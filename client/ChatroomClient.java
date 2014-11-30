@@ -153,6 +153,12 @@ public class ChatroomClient extends Client {
         }
     }
 
+    /**
+     * Sends a message over the server.
+     * Primarily for use in for when a P2P Client is open.
+     * @param message - String to send to the server.
+     * @author Mike
+     */
     public void sendMessage(String message) {
     	if(message.equals("")) {
     		System.out.println("Error: Trying to write the empty string.");
@@ -285,6 +291,11 @@ public class ChatroomClient extends Client {
 		frame.setVisible(true);
 	}
 	
+	/**
+	 * Update the list of users from the server.
+	 * @param users - User List from the server.
+	 * @author Mike
+	 */
 	private void updateList(String[] users) {
 		if(users.length != list.size()) {
 			list = new DefaultListModel<String>();
@@ -301,6 +312,11 @@ public class ChatroomClient extends Client {
 		}
 	}
 	
+	/**
+	 * getChannel()
+	 * @return - Channel object
+	 * @author Mike
+	 */
 	public Channel getChannel() {
 		return channel;
 	}

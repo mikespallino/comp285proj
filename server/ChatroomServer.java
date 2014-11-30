@@ -57,7 +57,7 @@ public class ChatroomServer extends Server {
              .option(ChannelOption.SO_BACKLOG, 128)
              .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            // Bind and start to accept incoming connections.
+            //Bind and start to accept incoming connections.
             ChannelFuture f = b.bind(port).sync();
 
             while(true) {
@@ -73,7 +73,7 @@ public class ChatroomServer extends Server {
             	}
             	userList.setListData(users);
             	
-            	 //Forces the scroll pane to actually scroll to the bottom when new data is put in
+            	//Forces the scroll pane to actually scroll to the bottom when new data is put in
             	output.setCaretPosition(output.getDocument().getLength());
             	if(messages.size() > 0) {
             		for(int i = 0; i < messages.size(); i++) {
@@ -102,7 +102,7 @@ public class ChatroomServer extends Server {
             	}
             }
             
-            // Wait until the server socket is closed.
+            //Wait until the server socket is closed.
             f.channel().closeFuture().sync();
         } finally {
             workerGroup.shutdownGracefully();

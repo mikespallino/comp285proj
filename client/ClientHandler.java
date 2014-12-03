@@ -61,8 +61,9 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 			parseEndOfMessage(users);
 		} else if(message.indexOf("has left MAD Chat!") != -1) {
 			int index = 12;
-			String user = message.substring(index, index + userLength(message.substring(index),11));
+			String user = message.substring(index, index + userLength(message.substring(index),11) + 1);
 			for(int i = 0; i < userList.size(); i++) {
+				System.out.println(user + "    " + userList.get(i));
 				if(userList.get(i).equals(user)) {
 					userList.remove(i);
 				}

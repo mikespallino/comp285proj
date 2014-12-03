@@ -54,7 +54,7 @@ public class ChatroomClient extends Client {
 	
     public static void main(String[] args) {
     	try {
-    		new ChatroomClient("10.34.11.17", 8080).setUp();
+    		new ChatroomClient("10.33.11.99", 8080).setUp();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -206,6 +206,7 @@ public class ChatroomClient extends Client {
 		showList.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
+            	updateList(ClientHandler.getUsers());
 				JFrame userFrame = new JFrame("User List");
 				userFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				userFrame.add(userListScrollPane);

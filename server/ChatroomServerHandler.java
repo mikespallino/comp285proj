@@ -59,6 +59,9 @@ public class ChatroomServerHandler extends ServerHandler {
 		if(message.equals("")) {
 			System.out.println("Error: Wrote empty string. " + ctx.channel());
 		} else {
+			if(message.indexOf("/nick") != -1) {
+				//nickname register.
+			}
 			if(!message.startsWith("[P2P]")) {
 				System.out.println("channelRead0 (not P2P):: true");
 				this.message = "[" + ctx.channel().remoteAddress() + "] : " + message;

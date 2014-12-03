@@ -14,6 +14,7 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -47,17 +49,90 @@ public class ChatroomClient extends Client {
 	private DefaultListModel<String> list = new DefaultListModel<String>();
 	ArrayList<P2PClient> p2pClients = new ArrayList<>();
 	
+	private static String host;
+	private static String ip;
+	private static Integer port;
+	private static String nickname = null;
+	private static volatile boolean ready = false;
+	
 	public ChatroomClient(String host, int port) {
 		super(host, port);
 		createGUI();
 	}
 	
     public static void main(String[] args) {
+    	mainWindow();
     	try {
-    		new ChatroomClient("10.33.11.99", 8080).setUp();
+    		while(true) {
+    			if(ready)
+    				break;
+    		}
+    		
+    		if(host != null && port != null) {
+    			new ChatroomClient(host, port).setUp();
+    		} else {
+    			System.err.println("Specify a valid host and port.");
+    		}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+    }
+    
+    private static void mainWindow() {    	
+    	JFrame frame = new JFrame("MAD Chat - Client");
+    	JLabel hostNameLabel = new JLabel("Host: ");
+    	JTextField hostName = new JTextField(10);
+    	JLabel portNumberLabel = new JLabel("Port: ");
+    	JTextField portNumber = new JTextField(5);
+    	JButton connect = new JButton("Connect");
+    	connect.setActionCommand("clicked");
+    	
+    	JPanel pane = new JPanel();
+    	GroupLayout layout = new GroupLayout(pane);
+    	layout.setHorizontalGroup(
+				layout.createSequentialGroup()
+					.addGroup(
+						layout.createParallelGroup()
+							.addComponent(hostNameLabel)
+							.addComponent(hostName))
+					.addGroup(
+						layout.createParallelGroup()
+							.addComponent(portNumberLabel)
+							.addComponent(portNumber)));
+		
+		layout.setVerticalGroup(
+				layout.createSequentialGroup()
+					.addGroup(
+						layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+							.addComponent(hostNameLabel)
+							.addComponent(hostName))
+					.addGroup(
+						layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+							.addComponent(portNumberLabel)
+							.addComponent(portNumber)));
+    	
+		frame.setLayout(new FlowLayout());
+		frame.add(pane);
+		frame.add(connect);
+		
+		connect.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(e.getActionCommand().equalsIgnoreCase("clicked")) {
+					host = hostName.getText();
+					port = new Integer(portNumber.getText());
+					ready = true;
+					frame.dispose();
+				}
+			}
+		});
+		
+    	frame.setSize(200,100);
+    	frame.setLocationRelativeTo(null);
+    	frame.pack();
+    	frame.setResizable(false);
+    	frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    	frame.setVisible(true);
     }
     
     /**
@@ -93,6 +168,7 @@ public class ChatroomClient extends Client {
             boolean firstRun = true;
             while(true) {
             	if(firstRun) {
+            		ip = (channel.localAddress().toString());
             		output.append("Welcome to MAD Chat!\nServer: " + handler.getServer().remoteAddress() + "\n");
             		firstRun = false;
             	}
@@ -321,4 +397,9 @@ public class ChatroomClient extends Client {
 	public Channel getChannel() {
 		return channel;
 	}
+
+	public static String getIp() {
+		return ip;
+	}
+	
 }

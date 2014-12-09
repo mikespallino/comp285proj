@@ -8,6 +8,7 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 
 public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 	
@@ -44,15 +45,19 @@ public class ServerChannelInitializer extends ChannelInitializer<SocketChannel> 
 	 * @author Mike
 	 */
 	public void getMessage() {
-		if(handlers != null) {
-			//Iterator it = handlers.iterator();
-			for(ChatroomServerHandler handler: handlers) {
-				if(handler != null && handler.getMessage() != null && !handler.getMessage().equals("")) {
-					messages.add(handler.getMessage());
-					handler.resetMessage();
-					System.out.println("removed.");
+		try {
+			if(handlers != null) {
+				//Iterator it = handlers.iterator();
+				for(ChatroomServerHandler handler: handlers) {
+					if(handler != null && handler.getMessage() != null && !handler.getMessage().equals("")) {
+						messages.add(handler.getMessage());
+						handler.resetMessage();
+						System.out.println("removed.");
+					}
 				}
 			}
+		} catch(ConcurrentModificationException e) {
+			
 		}
 	}
 	

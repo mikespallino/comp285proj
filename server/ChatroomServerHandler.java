@@ -6,6 +6,8 @@ import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
+import java.util.HashMap;
+
 /**
  * ChatroomServerHandler
  * Handles incoming, and outgoing client connections
@@ -14,6 +16,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
  */
 public class ChatroomServerHandler extends ServerHandler {
 
+	private static HashMap<Channel, String> users = new HashMap<>();
 	private static final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 	private String message = "";
 	
@@ -27,6 +30,7 @@ public class ChatroomServerHandler extends ServerHandler {
 	public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
 		message = "[" + ctx.channel().remoteAddress() + "] has joined MAD Chat!";
 		channels.add(ctx.channel());
+		users.put(ctx.channel(), "");
 		for(Channel channel : channels) {
 			channel.writeAndFlush("[SERVER] : [" + ctx.channel().remoteAddress() + "] has joined MAD Chat!\t" + getUsers() + "\r\n");
 		}
@@ -42,9 +46,14 @@ public class ChatroomServerHandler extends ServerHandler {
 	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
 		message = "[" + ctx.channel().remoteAddress() + "] has left MAD Chat!";
 		for(Channel channel : channels) {
-			channel.writeAndFlush("[SERVER] : [" + ctx.channel().remoteAddress() + "] has left MAD Chat!\r\n");
+			if(users.containsKey(ctx.channel()) && !users.get(ctx.channel()).equals("")) {
+				channel.writeAndFlush("[SERVER] : [" + ctx.channel().remoteAddress() + " (" + users.get(ctx.channel()) + ")] has left MAD Chat!\r\n");
+			} else {
+				channel.writeAndFlush("[SERVER] : [" + ctx.channel().remoteAddress() + "] has left MAD Chat!\r\n");
+			}
 		}
 		channels.remove(ctx.channel());
+		users.remove(ctx.channel());
 	}
 
 	/**
@@ -60,14 +69,27 @@ public class ChatroomServerHandler extends ServerHandler {
 			System.out.println("Error: Wrote empty string. " + ctx.channel());
 		} else {
 			if(message.indexOf("/nick") != -1) {
-				//nickname register.
+				String name = message.substring(message.indexOf(" ") + 1);
+				if(!users.containsValue(name)) {
+					users.replace(ctx.channel(), name);
+					for(Channel c: channels) {
+						c.writeAndFlush("UPDATE LIST " + getUsers() + "\r\n");
+					}
+				} else {
+					ctx.channel().writeAndFlush("[SERVER] : Nickname already in use.\r\n");
+				}
+				return;
 			}
 			if(!message.startsWith("[P2P]")) {
 				System.out.println("channelRead0 (not P2P):: true");
 				this.message = "[" + ctx.channel().remoteAddress() + "] : " + message;
 				for(Channel c: channels) {
 					if(c != ctx.channel()) {
-						c.writeAndFlush("[" + ctx.channel().remoteAddress() + "] : " + message + "\r\n");
+						if(users.containsKey(ctx.channel()) && !users.get(ctx.channel()).equals("")) {
+							c.writeAndFlush("[" + ctx.channel().remoteAddress() + " (" + users.get(ctx.channel()) + ")] : " + message + "\r\n");
+						} else {
+							c.writeAndFlush("[" + ctx.channel().remoteAddress() + "] : " + message + "\r\n");
+						}
 			 		} else {
 			 			c.writeAndFlush("[you] : " + message + "\r\n");
 			 		}
@@ -76,6 +98,7 @@ public class ChatroomServerHandler extends ServerHandler {
 				int startFrom = message.indexOf("FROM : [") + 8;
 				int endFrom = message.indexOf(']', startFrom);
 				String userFrom = message.substring(startFrom, endFrom);
+				System.out.println(userFrom);
 				int startTo = message.indexOf("TO : [") + 6;
 				int endTo = message.indexOf(']', startTo);
 				String userTo = message.substring(startTo, endTo);
@@ -128,7 +151,11 @@ public class ChatroomServerHandler extends ServerHandler {
 	private String getUsers() {
 		String temp = "";
 		for(Channel c : channels) {
+			if(users.containsKey(c) && !users.get(c).equals("")) {
+				temp += "[" + c.remoteAddress() + " (" + users.get(c) + ")] ";
+			} else {
 				temp += "[" + c.remoteAddress() + "] ";
+			}
 		}
 		return temp;
 	}

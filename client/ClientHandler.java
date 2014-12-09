@@ -59,17 +59,38 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 			this.message = message.substring(0, message.indexOf("\t"));
 			String users = message.substring(message.indexOf("\t") + 1);
 			parseEndOfMessage(users);
+			/*if(message.indexOf("(") != -1 && message.indexOf(")") < message.indexOf("]")) {
+				for(String addr: userList) {
+					if(addr.equals(message.substring(message.indexOf("("), message.indexOf(")") + message.indexOf(")")))) {
+						addr += message.substring(message.indexOf("("), message.indexOf(")") + 1);
+					}
+				}
+			}*/
 		} else if(message.indexOf("has left MAD Chat!") != -1) {
 			int index = 12;
-			String user = message.substring(index, index + userLength(message.substring(index),11) + 1);
+			int index2 = message.indexOf(" (");
+			String user;
+			if(index2 != -1) {
+				user = message.substring(index, index2);
+			} else {
+				user = message.substring(index, index + userLength(message.substring(index), 11) + 1);
+			}
 			for(int i = 0; i < userList.size(); i++) {
 				System.out.println(user + "    " + userList.get(i));
 				if(userList.get(i).equals(user)) {
 					userList.remove(i);
 				}
 			}
+		} else if(message.indexOf("UPDATE LIST") != -1) {
+			this.message = "";
+			String users = message.substring(12);
+			parseEndOfMessage(users);
+			System.out.println("UPDATE LIST Done.");
+			for(int i = 0; i < userList.size(); i++) {
+				System.out.println(userList.get(i));
+			}
 		}
-		System.out.println("channelRead0:: Message: " + this.message);
+		System.out.println("channelRead0:: Message: " + message);
 	}
 
 	/**
@@ -117,7 +138,10 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 		}
 		if(users.indexOf(']', from) != -1) {
 			end = users.indexOf(']', from);
-		}
+		}/* else if(users.indexOf("\t") != -1) {
+			end = users.indexOf("\t", from);
+		}*/
+		//System.out.println(users + " " + users.substring(start, end));
 		return end - start - 1;
 	}
 	
@@ -145,6 +169,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 	 */
 	private void parseEndOfMessage(String users) {	
 		int addressLength = -1;
+		System.out.println(users);
 		for(int i = 0; i < users.length(); i+=(addressLength+3)) {
 			addressLength = userLength(users, i);
 			if(i+addressLength < users.length()) {
@@ -153,6 +178,13 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 				for(int j = 0; j < userList.size(); j++) {
 					if(temp.equals(userList.get(j))) {
 						newUser = false;
+					} else if(temp.indexOf("(") != -1) {
+						String tempUsr = temp.substring(0, temp.indexOf("(")-1);
+						if(tempUsr.equals(userList.get(j)) || (userList.get(j).indexOf("(") != -1 && tempUsr.equals(userList.get(j).substring(0, userList.get(j).indexOf("(")-1)))) {
+							newUser = false;
+							System.out.println("TRUE" + temp);
+							userList.set(j, temp);
+						}
 					}
 				}
 				if(newUser) {

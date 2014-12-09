@@ -36,6 +36,21 @@ public class ChatroomServer extends Server {
 		super(port);
 	}
     
+    public void run() throws Exception {
+    	run(true);
+    }
+    
+    public void run(boolean wait) throws Exception {
+    	setupThread.start();
+    	if (wait) {
+    		finishSetup();
+    	}
+    }
+    
+    public void finishSetup() throws InterruptedException {
+    	setupThread.join();
+    }
+    
     /**
      * run()
      * Sets up server
@@ -43,72 +58,80 @@ public class ChatroomServer extends Server {
      * Pulls data from the clients
      * @author Mike
      */
-	@Override
-    public void run() throws Exception {
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
-        ServerChannelInitializer initializer = new ServerChannelInitializer();
-        ArrayList<String> messages;
-        try {
-            ServerBootstrap b = new ServerBootstrap();
-            b.group(bossGroup, workerGroup)
-             .channel(NioServerSocketChannel.class)
-             .childHandler(initializer)
-             .option(ChannelOption.SO_BACKLOG, 128)
-             .childOption(ChannelOption.SO_KEEPALIVE, true);
+	private final Thread setupThread = new Thread() {
+		public void run() {
+			EventLoopGroup bossGroup = new NioEventLoopGroup();
+			EventLoopGroup workerGroup = new NioEventLoopGroup();
+			ServerChannelInitializer initializer = new ServerChannelInitializer();
+			ArrayList<String> messages;
+			try {
+				ServerBootstrap b = new ServerBootstrap();
+				b.group(bossGroup, workerGroup)
+						.channel(NioServerSocketChannel.class)
+						.childHandler(initializer)
+						.option(ChannelOption.SO_BACKLOG, 128)
+						.childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            //Bind and start to accept incoming connections.
-            ChannelFuture f = b.bind(port).sync();
+				// Bind and start to accept incoming connections.
+				ChannelFuture f = b.bind(port).sync();
 
-            while(true) {
-            	initializer.getMessage();
-            	messages = initializer.getMessages();
-            	String[] users = new String[ChatroomServerHandler.getChannels().size()];
-            	int k = 0;
-            	for(Channel c: ChatroomServerHandler.getChannels()) {
-            		if(k < users.length) {
-	            		users[k] = c.remoteAddress().toString();
-	            		k++;
-            		}
-            	}
-            	userList.setListData(users);
-            	
-            	//Forces the scroll pane to actually scroll to the bottom when new data is put in
-            	output.setCaretPosition(output.getDocument().getLength());
-            	if(messages.size() > 0) {
-            		for(int i = 0; i < messages.size(); i++) {
-            			output.append(messages.get(i));
-            			output.append("\n");
-            		}
-            		initializer.resetMessages();
-            	}
-            	if(clicked) {
-            		if(message.getText().equalsIgnoreCase("/bye")) {
-			            workerGroup.shutdownGracefully();
-			            message.setText("");
-			            clicked = false;
-			            System.exit(0);
-            		} else if(!message.getText().equals("")) {
-            			output.append(message.getText() + "\r\n");
-            			for(Channel channel: ChatroomServerHandler.getChannels()) {
-            				channel.writeAndFlush("[SERVER] : " + message.getText() + "\r\n");
-                    	}
-						message.setText("");
-						clicked = false;
+				while (true) {
+					initializer.getMessage();
+					messages = initializer.getMessages();
+					String[] users = new String[ChatroomServerHandler
+							.getChannels().size()];
+					int k = 0;
+					for (Channel c : ChatroomServerHandler.getChannels()) {
+						if (k < users.length) {
+							users[k] = c.remoteAddress().toString();
+							k++;
+						}
+					}
+					userList.setListData(users);
+
+					// Forces the scroll pane to actually scroll to the bottom
+					// when new data is put in
+					output.setCaretPosition(output.getDocument().getLength());
+					if (messages.size() > 0) {
+						for (int i = 0; i < messages.size(); i++) {
+							output.append(messages.get(i));
+							output.append("\n");
+						}
+						initializer.resetMessages();
+					}
+					if (clicked) {
+						if (message.getText().equalsIgnoreCase("/bye")) {
+							workerGroup.shutdownGracefully();
+							message.setText("");
+							clicked = false;
+							System.exit(0);
+						} else if (!message.getText().equals("")) {
+							output.append(message.getText() + "\r\n");
+							for (Channel channel : ChatroomServerHandler
+									.getChannels()) {
+								channel.writeAndFlush("[SERVER] : "
+										+ message.getText() + "\r\n");
+							}
+							message.setText("");
+							clicked = false;
+						}
+					}
+					if (exit) {
+						break;
 					}
 				}
-            	if(exit) {
-            		break;
-            	}
-            }
-            
-            //Wait until the server socket is closed.
-            f.channel().closeFuture().sync();
-        } finally {
-            workerGroup.shutdownGracefully();
-            bossGroup.shutdownGracefully();
-        }
-    }
+
+				// Wait until the server socket is closed.
+				f.channel().closeFuture().sync();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally {
+				workerGroup.shutdownGracefully();
+				bossGroup.shutdownGracefully();
+			}
+		}
+	};
 	
 	/**
      * createGUI()

@@ -227,6 +227,12 @@ public class ChatroomClient extends Client {
 
 					// update list
 					updateList(ClientHandler.getUsers());
+					
+					for(int i = 0; i < p2pClients.size(); i++) {
+						if(!p2pClients.get(i).frame.isVisible()) {
+							p2pClients.remove(i);
+						}
+					}
 
 					// send data
 					if (clicked) {
@@ -321,18 +327,21 @@ public class ChatroomClient extends Client {
 							boolean createNew = true;
 							System.out.println("actionPerformed (list listener):: " + userList.getSelectedValue());
 							String peerAddress = userList.getSelectedValue();
-							if(userList.getSelectedValue().indexOf("(") != -1) {
+							if(userList.getSelectedValue() != null && userList.getSelectedValue().indexOf("(") != -1) {
 								peerAddress = userList.getSelectedValue().substring(0, userList.getSelectedValue().indexOf("(")-1);
 							}
-							for(int i = 0; i < p2pClients.size(); i++) {
-								if(p2pClients.get(i).getHost().equals(peerAddress)) {
-									createNew = false;
+							if(peerAddress != null) {
+								for(int i = 0; i < p2pClients.size(); i++) {
+									if(p2pClients.get(i).getHost().equals(peerAddress)) {
+										createNew = false;
+									}
+								}
+								if(createNew) {
+									p2pClients.add(new P2PClient(peerAddress, ChatroomClient.this));
 								}
 							}
-							if(createNew) {
-								p2pClients.add(new P2PClient(peerAddress, ChatroomClient.this));
-							}
 							userFrame.dispose();
+							userList.clearSelection();
 						}
 					}
 				});

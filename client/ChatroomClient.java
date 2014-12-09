@@ -320,7 +320,10 @@ public class ChatroomClient extends Client {
 						if(arg0.getValueIsAdjusting() == false) {
 							boolean createNew = true;
 							System.out.println("actionPerformed (list listener):: " + userList.getSelectedValue());
-							String peerAddress = userList.getSelectedValue(); //.substring(0, userList.getSelectedValue().indexOf("(")); < nicknames not there yet
+							String peerAddress = userList.getSelectedValue();
+							if(userList.getSelectedValue().indexOf("(") != -1) {
+								peerAddress = userList.getSelectedValue().substring(0, userList.getSelectedValue().indexOf("(")-1);
+							}
 							for(int i = 0; i < p2pClients.size(); i++) {
 								if(p2pClients.get(i).getHost().equals(peerAddress)) {
 									createNew = false;

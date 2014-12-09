@@ -19,7 +19,7 @@ import javax.swing.JTextField;
  */
 public class P2PClient extends Client {
 	
-	ChatroomClient chatroom;
+	private ChatroomClient chatroom;
 	
 	public P2PClient(String peerAddress, ChatroomClient c) {
 		super(peerAddress, c);

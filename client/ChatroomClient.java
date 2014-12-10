@@ -459,13 +459,8 @@ public class ChatroomClient extends Client {
 		return ClientHandler.getUsers();
 	}
 	
-	public void destroy() {
-		frame = null;
-		userList = null;
-		output = null;
-		message = null;
-		sendButton = null;
-		areaScrollPane = null;
+	public ArrayList<P2PClient> getP2PClients() {
+		return p2pClients;
 	}
 	
 }

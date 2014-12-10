@@ -68,7 +68,7 @@ public class ChatroomServerHandler extends ServerHandler {
 		if(message.equals("")) {
 			System.out.println("Error: Wrote empty string. " + ctx.channel());
 		} else {
-			if(message.indexOf("/nick") != -1) {
+			if(message.startsWith("/nick")) {
 				String name = message.substring(message.indexOf(" ") + 1);
 				if(!users.containsValue(name)) {
 					users.replace(ctx.channel(), name);

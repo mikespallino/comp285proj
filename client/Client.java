@@ -70,4 +70,8 @@ public abstract class Client {
 		return host;
 	}
 	
+	public JTextArea getOutput() {
+		return output;
+	}
+	
 }

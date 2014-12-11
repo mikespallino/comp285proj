@@ -31,6 +31,7 @@ public class P2PClient extends Client {
 	/**
 	 * createGUI()
 	 * creates the GUI for the P2P Client window.
+	 * @author Mike
 	 */
 	@Override
 	protected void createGUI() {

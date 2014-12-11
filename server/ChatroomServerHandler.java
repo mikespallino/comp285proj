@@ -10,7 +10,7 @@ import java.util.HashMap;
 
 /**
  * ChatroomServerHandler
- * Handles incoming, and outgoing client connections
+ * Handles incoming, and outgoing client connections.
  * Writes data received from a client to all other clients.
  * @author Mike
  */

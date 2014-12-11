@@ -84,8 +84,12 @@ public class ClientTest {
 		}
 		
 		Thread.sleep(1000);
+		
+		//Send P2P message from client 2 to client 1
 		c2.sendMessage("[P2P] FROM : [" + c2.getConnection() + "] TO : [" + c1.getConnection() + "] : Hello\r\n");
 		Thread.sleep(1500);
+		
+		//Check to make sure client 1 gets the P2P message from client 2
 		c1Index = c1.getP2PClients().get(0).getOutput().getText().indexOf("[PEER] : [" + c2.getConnection() + "] : Hello");
 		if(c2Index == -1) {
 			System.err.println("\nFAILED: P2P Chat didn't send message properly for second client.\n");

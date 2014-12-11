@@ -50,7 +50,6 @@ public class ChatroomClient extends Client {
 	ArrayList<P2PClient> p2pClients = new ArrayList<>();
 	
 	private static String host;
-	private static String ip;
 	private static Integer port;
 	private static volatile boolean ready = false;
 	
@@ -79,6 +78,11 @@ public class ChatroomClient extends Client {
 		}
     }
     
+    /**
+     * mainWindow()
+     * Creates the initial window that allows the user to choose a host IP and port number.
+     * @author Mike
+     */
     private static void mainWindow() {    	
     	JFrame frame = new JFrame("MAD Chat - Client");
     	JLabel hostNameLabel = new JLabel("Host: ");
@@ -138,15 +142,21 @@ public class ChatroomClient extends Client {
     
     /**
      * setUp()
-     * Sets up the connection
-     * Writes data to the server
-     * Pulls data from the server
+     * Calls the setUp thread method so that the client will close the thread.
+     * @throws Exception
      * @author Mike
      */
     public void setUp() throws Exception {
     	setUp(true);
     }
     
+    /**
+     * setUp(wait)
+     * Starts the client thread.
+     * @param wait - close the thread.
+     * @throws Exception
+     * @author Mike
+     */
     public void setUp(boolean wait) throws Exception {
     	setupThread.start();
     	if (wait) {
@@ -154,10 +164,24 @@ public class ChatroomClient extends Client {
     	}
     }
     
+    /**
+     * finishSetup()
+     * Stop the thread.
+     * @throws InterruptedException
+     * @author Mike
+     */
     public void finishSetup() throws InterruptedException {
     	setupThread.join();
     }
     
+    /**
+     * setUp()
+     * Creates a thread for the client.
+     * Sets up the connection
+     * Writes data to the server
+     * Pulls data from the server
+     * @author Mike
+     */
 	private final Thread setupThread = new Thread() {
 		public void run() {
 			EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -185,7 +209,6 @@ public class ChatroomClient extends Client {
 				boolean firstRun = true;
 				while (true) {
 					if (firstRun) {
-						ip = (channel.localAddress().toString());
 						output.append("Welcome to MAD Chat!\nServer: " + handler.getServer().remoteAddress() + "\n");
 						firstRun = false;
 					}
@@ -229,8 +252,10 @@ public class ChatroomClient extends Client {
 					updateList(ClientHandler.getUsers());
 					
 					for(int i = 0; i < p2pClients.size(); i++) {
-						if(!p2pClients.get(i).frame.isVisible()) {
-							p2pClients.remove(i);
+						if(p2pClients.get(i) != null) {
+							if(!p2pClients.get(i).frame.isVisible()) {
+								p2pClients.remove(i);
+							}
 						}
 					}
 
@@ -256,6 +281,10 @@ public class ChatroomClient extends Client {
 		}
 	};
 
+	/**
+	 * getParent()
+	 * @return a reference to this ChatroomClient object.
+	 */
 	private ChatroomClient getParent() {
 		return this;
 	}
@@ -440,25 +469,36 @@ public class ChatroomClient extends Client {
 	
 	/**
 	 * getChannel()
-	 * @return - Channel object
+	 * @return - Channel object.
 	 * @author Mike
 	 */
 	public Channel getChannel() {
 		return channel;
 	}
 	
+	/**
+	 * getConnection()
+	 * @return - The local address of the channel.
+	 * @author Mike
+	 */
 	public String getConnection() {
 		return channel.localAddress().toString();
 	}
-
-	public static String getIp() {
-		return ip;
-	}
 	
+	/**
+	 * getUsers()
+	 * @return - the ClientHandler's userList.
+	 * @author Mike
+	 */
 	public static String[] getUsers() {
 		return ClientHandler.getUsers();
 	}
 	
+	/**
+	 * getP2PClients()
+	 * @return - The ArrayList of P2P clients.
+	 * @author Mike
+	 */
 	public ArrayList<P2PClient> getP2PClients() {
 		return p2pClients;
 	}

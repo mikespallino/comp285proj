@@ -36,10 +36,21 @@ public class ChatroomServer extends Server {
 		super(port);
 	}
     
+    /**
+     * run()
+     * Start the server thread (stop the thread).
+     * @author Mike
+     */
     public void run() throws Exception {
     	run(true);
     }
     
+    /**
+     * Start the server thread.
+     * @param wait - Stop the Thread.
+     * @throws Exception
+     * @author Mike
+     */
     public void run(boolean wait) throws Exception {
     	setupThread.start();
     	if (wait) {
@@ -47,15 +58,22 @@ public class ChatroomServer extends Server {
     	}
     }
     
+    /**
+     * finishSetup()
+     * Stop the server thread.
+     * @throws InterruptedException
+     * @author Mike
+     */
     public void finishSetup() throws InterruptedException {
     	setupThread.join();
     }
     
     /**
      * run()
-     * Sets up server
-     * Writes data to the clients
-     * Pulls data from the clients
+     * Creates a thread to run the Server.
+     * Sets up server.
+     * Writes data to the clients.
+     * Pulls data from the clients.
      * @author Mike
      */
 	private final Thread setupThread = new Thread() {
@@ -124,7 +142,6 @@ public class ChatroomServer extends Server {
 				// Wait until the server socket is closed.
 				f.channel().closeFuture().sync();
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} finally {
 				workerGroup.shutdownGracefully();

@@ -41,7 +41,7 @@ import javax.swing.event.ListSelectionListener;
  * Sets up connections to the main chat room.
  * @author Mike
  */
-public class ChatroomClient extends Client {
+public class ChatroomClient extends Client implements ActionListener {
 	
 	private boolean clicked = false;
 	private Channel channel;
@@ -84,11 +84,11 @@ public class ChatroomClient extends Client {
      * @author Mike
      */
     private static void mainWindow() {    	
-    	JFrame frame = new JFrame("MAD Chat - Client");
+    	final JFrame frame = new JFrame("MAD Chat - Client");
     	JLabel hostNameLabel = new JLabel("Host: ");
-    	JTextField hostName = new JTextField(10);
+    	final JTextField hostName = new JTextField(10);
     	JLabel portNumberLabel = new JLabel("Port: ");
-    	JTextField portNumber = new JTextField(5);
+    	final JTextField portNumber = new JTextField(5);
     	JButton connect = new JButton("Connect");
     	connect.setActionCommand("clicked");
     	
@@ -142,144 +142,104 @@ public class ChatroomClient extends Client {
     
     /**
      * setUp()
-     * Calls the setUp thread method so that the client will close the thread.
-     * @throws Exception
-     * @author Mike
-     */
-    public void setUp() throws Exception {
-    	setUp(true);
-    }
-    
-    /**
-     * setUp(wait)
-     * Starts the client thread.
-     * @param wait - close the thread.
-     * @throws Exception
-     * @author Mike
-     */
-    public void setUp(boolean wait) throws Exception {
-    	setupThread.start();
-    	if (wait) {
-    		finishSetup();
-    	}
-    }
-    
-    /**
-     * finishSetup()
-     * Stop the thread.
-     * @throws InterruptedException
-     * @author Mike
-     */
-    public void finishSetup() throws InterruptedException {
-    	setupThread.join();
-    }
-    
-    /**
-     * setUp()
      * Creates a thread for the client.
      * Sets up the connection
      * Writes data to the server
      * Pulls data from the server
      * @author Mike
      */
-	private final Thread setupThread = new Thread() {
-		public void run() {
-			EventLoopGroup workerGroup = new NioEventLoopGroup();
+	private void setUp() {
+		EventLoopGroup workerGroup = new NioEventLoopGroup();
+		try {
+			Bootstrap b = new Bootstrap();
+			final ClientHandler handler = new ClientHandler(this);
+			b.group(workerGroup);
+			b.channel(NioSocketChannel.class);
+			b.option(ChannelOption.SO_KEEPALIVE, true);
+			b.handler(new ChannelInitializer<SocketChannel>() {
+				@Override
+				public void initChannel(SocketChannel ch) throws Exception {
+					// max size 8192, all input delimited by line endings
+					ch.pipeline().addLast("framer",new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
+					ch.pipeline().addLast("Decoder", new StringDecoder());
+					ch.pipeline().addLast("Encoder", new StringEncoder());
+					ch.pipeline().addLast(handler);
+				}
+			});
 
-			try {
-				Bootstrap b = new Bootstrap();
-				final ClientHandler handler = new ClientHandler();
-				b.group(workerGroup);
-				b.channel(NioSocketChannel.class);
-				b.option(ChannelOption.SO_KEEPALIVE, true);
-				b.handler(new ChannelInitializer<SocketChannel>() {
-					@Override
-					public void initChannel(SocketChannel ch) throws Exception {
-						// max size 8192, all input delimited by line endings
-						ch.pipeline().addLast("framer",new DelimiterBasedFrameDecoder(8192, Delimiters.lineDelimiter()));
-						ch.pipeline().addLast("Decoder", new StringDecoder());
-						ch.pipeline().addLast("Encoder", new StringEncoder());
-
-						ch.pipeline().addLast(handler);
-					}
-				});
-
-				// Start the client.
-				channel = b.connect(host, port).sync().channel();
-				boolean firstRun = true;
-				while (true) {
-					if (firstRun) {
-						output.append("Welcome to MAD Chat!\nServer: " + handler.getServer().remoteAddress() + "\n");
-						firstRun = false;
-					}
-					// Forces the scroll pane to actually scroll to the bottom
-					// when new data is put in
-					output.setCaretPosition(output.getDocument().getLength());
-					if (handler.getMessage() != null && !handler.getMessage().equals("")) {
-						// send message as usual
-						if (handler.getMessage().indexOf("[P2P]") == -1) {
-							if(handler.getMessage().indexOf("UPDATE LIST") != -1) {
-								updateList(ClientHandler.getUsers());
-							} else {
-								output.append(handler.getMessage() + "\n");
-								System.out.println("setUp (loop):: message: "+ handler.getMessage());
-							}
-							handler.resetMessage();
+			// Start the client.
+			channel = b.connect(host, port).sync().channel();
+			boolean firstRun = true;
+			while (true) {
+				if (firstRun) {
+					output.append("Welcome to MAD Chat!\nServer: " + handler.getServer().remoteAddress() + "\n");
+					firstRun = false;
+				}
+				// Forces the scroll pane to actually scroll to the bottom
+				// when new data is put in
+				output.setCaretPosition(output.getDocument().getLength());
+				if (handler.getMessage() != null && !handler.getMessage().equals("")) {
+					// send message as usual
+					if (handler.getMessage().indexOf("[P2P]") == -1) {
+						if(handler.getMessage().indexOf("UPDATE LIST") != -1) {
+							updateList(ClientHandler.getUsers());
 						} else {
-							// send message to P2P window
-							boolean newP2P = true;
-							System.out.println(handler.getMessage());
-							String peerAddress = handler.getMessage().substring(13,handler.getMessage().indexOf("]",13));
-							System.out.println("setUp (loop):: peerAddress: "+ peerAddress);
-							String msg = handler.getMessage().substring(handler.getMessage().indexOf(":",handler.getMessage().indexOf("TO")) + 1);
-							for (int i = 0; i < p2pClients.size(); i++) {
-								if (peerAddress.equals(p2pClients.get(i).getHost())) {
-									newP2P = false;
-									p2pClients.get(i).append("[PEER] : " + msg);
-								}
-							}
-							if (newP2P) {
-								System.out.println("setUp (loop):: Starting client.");
-								p2pClients.add(new P2PClient(peerAddress, getParent()));
-								p2pClients.get(p2pClients.size() - 1).append("[PEER] : " + msg);
+							output.append(handler.getMessage() + "\n");
+							System.out.println("setUp (loop):: message: "+ handler.getMessage());
+						}
+						handler.resetMessage();
+					} else {
+						// send message to P2P window
+						boolean newP2P = true;
+						System.out.println(handler.getMessage());
+						String peerAddress = handler.getMessage().substring(13,handler.getMessage().indexOf("]",13));
+						System.out.println("setUp (loop):: peerAddress: "+ peerAddress);
+						String msg = handler.getMessage().substring(handler.getMessage().indexOf(":",handler.getMessage().indexOf("TO")) + 1);
+						for (int i = 0; i < p2pClients.size(); i++) {
+							if (peerAddress.equals(p2pClients.get(i).getHost())) {
 								newP2P = false;
-							}
-							handler.resetMessage();
-						}
-					}
-
-					// update list
-					updateList(ClientHandler.getUsers());
-					
-					for(int i = 0; i < p2pClients.size(); i++) {
-						if(p2pClients.get(i) != null) {
-							if(!p2pClients.get(i).frame.isVisible()) {
-								p2pClients.remove(i);
+								p2pClients.get(i).append("[PEER] : " + msg);
 							}
 						}
+						if (newP2P) {
+							System.out.println("setUp (loop):: Starting client.");
+							p2pClients.add(new P2PClient(peerAddress, getParent()));
+							p2pClients.get(p2pClients.size() - 1).append("[PEER] : " + msg);
+							newP2P = false;
+						}
+						handler.resetMessage();
 					}
-
-					// send data
-					if (clicked) {
-						if (message.getText().equalsIgnoreCase("/bye")) {
-							workerGroup.shutdownGracefully();
-							message.setText("");
-							System.exit(0);
-						} else if (!message.getText().equals("")) {
-							System.out.println(1);
-							sendMessage(message.getText());
-							message.setText("");
-							clicked = false;
+				}
+				// update list
+				updateList(ClientHandler.getUsers());
+				
+				for(int i = 0; i < p2pClients.size(); i++) {
+					if(p2pClients.get(i) != null) {
+						if(!p2pClients.get(i).frame.isVisible()) {
+							p2pClients.remove(i);
 						}
 					}
 				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} finally {
-				workerGroup.shutdownGracefully();
+				// send data
+				if (clicked) {
+					if (message.getText().equalsIgnoreCase("/bye")) {
+						workerGroup.shutdownGracefully();
+						message.setText("");
+						System.exit(0);
+					} else if (!message.getText().equals("")) {
+						System.out.println(1);
+						sendMessage(message.getText());
+						message.setText("");
+						clicked = false;
+					}
+				}
 			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			workerGroup.shutdownGracefully();
 		}
-	};
+	}
 
 	/**
 	 * getParent()
@@ -343,7 +303,7 @@ public class ChatroomClient extends Client {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
             	updateList(ClientHandler.getUsers());
-				JFrame userFrame = new JFrame("User List");
+				final JFrame userFrame = new JFrame("User List");
 				userFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				userFrame.add(userListScrollPane);
 				userFrame.pack();
@@ -501,6 +461,11 @@ public class ChatroomClient extends Client {
 	 */
 	public ArrayList<P2PClient> getP2PClients() {
 		return p2pClients;
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		System.out.println("CALLED: " + e.getActionCommand());
 	}
 	
 }

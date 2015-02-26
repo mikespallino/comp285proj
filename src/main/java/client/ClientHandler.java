@@ -4,6 +4,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import java.awt.event.ActionListener;
+import java.beans.EventHandler;
 import java.util.ArrayList;
 
 /**
@@ -17,6 +19,11 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 	private String message = "";
 	private static ArrayList<String> userList = new ArrayList<>();
 	private Channel server;
+	private Client client;
+	
+	public ClientHandler(ChatroomClient client) {
+		this.client = client;
+	}
 	
 	/**
 	 * exceptionCaught(ChannelHandlerContext ctx, Throwable cause)
@@ -53,7 +60,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
      * @author Mike
      */
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, String message) throws Exception {
+	protected void messageReceived(ChannelHandlerContext ctx, String message) throws Exception {
 		this.message = message;
 		if(message.indexOf("has joined MAD Chat!") != -1) {
 			this.message = message.substring(0, message.indexOf("\t"));
@@ -84,6 +91,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 				System.out.println(userList.get(i));
 			}
 		}
+		EventHandler.create(ActionListener.class, client, "actionPerformed", "");
 		System.out.println("channelRead0:: Message: " + message);
 	}
 

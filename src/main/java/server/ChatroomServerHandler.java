@@ -63,7 +63,7 @@ public class ChatroomServerHandler extends ServerHandler {
 	 * @author Mike
 	 */
 	@Override
-	public void channelRead0(ChannelHandlerContext ctx, String message) throws Exception {
+	public void messageReceived(ChannelHandlerContext ctx, String message) throws Exception {
 		System.out.println("channelRead0 (before):: " + message);
 		if(message.equals("")) {
 			System.out.println("Error: Wrote empty string. " + ctx.channel());

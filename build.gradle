@@ -1,0 +1,66 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'application'
+
+sourceCompatibility = 1.7
+version = '1.0'
+applicationName = 'MAD Chat'
+description = 'MAD Chat: Chat Program.'
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+}
+
+task clientJar(type: Jar) {
+	baseName = applicationName + ' Client'
+	manifest {
+        attributes 'Implementation-Title': applicationName + ' Client',
+                   'Implementation-Version': version,
+                   'Main-Class': "client.ChatroomClient"
+    }
+    from {
+             configurations.compile.collect {
+             	it.isDirectory() ? it : zipTree(it)
+             }
+             configurations.runtime.collect {
+             	it.isDirectory() ? it : zipTree(it)
+             }
+    }
+	from(sourceSets.main.output) {  
+        include "client/**"
+    }
+}
+
+task serverJar(type: Jar) {
+	baseName = applicationName + ' Server'
+	manifest {
+        attributes 'Implementation-Title': applicationName + ' Server',
+                   'Implementation-Version': version,
+                   'Main-Class': "server.ChatroomServer"
+    }
+    from {
+             configurations.compile.collect {
+             	it.isDirectory() ? it : zipTree(it)
+             }
+             configurations.runtime.collect {
+             	it.isDirectory() ? it : zipTree(it)
+             }
+    }
+	from(sourceSets.main.output) {  
+        include "server/**"
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	compile \
+	'com.google.guava:guava:18.0',
+	'io.netty:netty-all:5.0.0.Alpha1'
+}

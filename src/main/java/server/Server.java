@@ -32,11 +32,7 @@ public abstract class Server {
 		createGUI();
 	}
 	
-	/**
-	 * Subclasses must implement run().
-	 * @author Mike
-	 */
-	public abstract void run() throws Exception;
+	public abstract void setUp();
 	
 	/**
 	 * Subclasses must implement createGUI().

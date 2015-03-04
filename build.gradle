@@ -3,7 +3,7 @@ apply plugin: 'eclipse'
 apply plugin: 'application'
 
 sourceCompatibility = 1.7
-version = '1.0'
+version = '1.0_01'
 applicationName = 'MAD Chat'
 description = 'MAD Chat: Chat Program.'
 
@@ -32,6 +32,7 @@ task clientJar(type: Jar) {
     }
 	from(sourceSets.main.output) {  
         include "client/**"
+        include "util/**"
     }
 }
 

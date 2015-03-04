@@ -12,6 +12,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import com.google.common.eventbus.EventBus;
+
 /**
  * P2PClient implementation
  * Sets up connection to a P2PServer.
@@ -26,6 +28,8 @@ public class P2PClient extends Client {
 		chatroom = c;
 		createGUI();
 		System.out.println("P2PClient:: created GUI");
+		incomingMessageEventBus = new EventBus();
+		incomingMessageEventBus.register(this);
 	}
 	
 	/**

@@ -29,11 +29,48 @@ import javax.swing.JTextField;
  */
 public class ChatroomServer extends Server {
 
-	private boolean exit = false;
-	private boolean clicked = false;
+	private ServerChannelInitializer initializer;
+	private EventLoopGroup bossGroup;
+	private EventLoopGroup workerGroup;
 	
     public ChatroomServer(int port) {
 		super(port);
+	}
+    
+    /**
+     * setUp()
+     * Creates a thread to run the Server.
+     * Sets up server.
+     * Writes data to the clients.
+     * Pulls data from the clients.
+     * @author Mike
+     */
+	@Override
+	public void setUp() {
+		bossGroup = new NioEventLoopGroup();
+		workerGroup = new NioEventLoopGroup();
+		initializer = new ServerChannelInitializer();
+		try {
+			ServerBootstrap b = new ServerBootstrap();
+			b.group(bossGroup, workerGroup)
+					.channel(NioServerSocketChannel.class)
+					.childHandler(initializer)
+					.option(ChannelOption.SO_BACKLOG, 128)
+					.childOption(ChannelOption.SO_KEEPALIVE, true);
+
+			// Bind and start to accept incoming connections.
+			ChannelFuture f = b.bind(port).sync();
+
+			while(update(initializer.getMessages())) { }
+
+			// Wait until the server socket is closed.
+			f.channel().closeFuture().sync();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} finally {
+			workerGroup.shutdownGracefully();
+			bossGroup.shutdownGracefully();
+		}
 	}
     
     /**
@@ -41,114 +78,46 @@ public class ChatroomServer extends Server {
      * Start the server thread (stop the thread).
      * @author Mike
      */
-    public void run() throws Exception {
-    	run(true);
+    public boolean update(ArrayList<String> messages) {
+    	try {
+			Thread.sleep(1000);
+			output.setCaretPosition(output.getDocument().getLength());
+			initializer.getMessage();
+			if (messages.size() > 0) {
+				for (int i = 0; i < messages.size(); i++) {
+					output.append(messages.get(i));
+					output.append("\n");
+				}
+				initializer.resetMessages();
+			}
+			String[] users = new String[ChatroomServerHandler.getChannels().size()];
+			int k = 0;
+			for (Channel c : ChatroomServerHandler.getChannels()) {
+				if (k < users.length) {
+					users[k] = c.remoteAddress().toString();
+					k++;
+				}
+			}
+			userList.setListData(users);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			return false;
+		}
+    	return true;
     }
     
-    /**
-     * Start the server thread.
-     * @param wait - Stop the Thread.
-     * @throws Exception
-     * @author Mike
-     */
-    public void run(boolean wait) throws Exception {
-    	setupThread.start();
-    	if (wait) {
-    		finishSetup();
+    private void sendMessage(String message) {
+    	if (message.equalsIgnoreCase("/bye")) {
+			workerGroup.shutdownGracefully();
+			bossGroup.shutdownGracefully();
+			System.exit(0);
+		} else if (!message.equals("")) {
+			output.append(message + "\r\n");
+			for (Channel channel : ChatroomServerHandler.getChannels()) {
+				channel.writeAndFlush("[SERVER] : " + message + "\r\n");
+			}
     	}
     }
-    
-    /**
-     * finishSetup()
-     * Stop the server thread.
-     * @throws InterruptedException
-     * @author Mike
-     */
-    public void finishSetup() throws InterruptedException {
-    	setupThread.join();
-    }
-    
-    /**
-     * run()
-     * Creates a thread to run the Server.
-     * Sets up server.
-     * Writes data to the clients.
-     * Pulls data from the clients.
-     * @author Mike
-     */
-	private final Thread setupThread = new Thread() {
-		public void run() {
-			EventLoopGroup bossGroup = new NioEventLoopGroup();
-			EventLoopGroup workerGroup = new NioEventLoopGroup();
-			ServerChannelInitializer initializer = new ServerChannelInitializer();
-			ArrayList<String> messages;
-			try {
-				ServerBootstrap b = new ServerBootstrap();
-				b.group(bossGroup, workerGroup)
-						.channel(NioServerSocketChannel.class)
-						.childHandler(initializer)
-						.option(ChannelOption.SO_BACKLOG, 128)
-						.childOption(ChannelOption.SO_KEEPALIVE, true);
-
-				// Bind and start to accept incoming connections.
-				ChannelFuture f = b.bind(port).sync();
-
-				while (true) {
-					initializer.getMessage();
-					messages = initializer.getMessages();
-					String[] users = new String[ChatroomServerHandler
-							.getChannels().size()];
-					int k = 0;
-					for (Channel c : ChatroomServerHandler.getChannels()) {
-						if (k < users.length) {
-							users[k] = c.remoteAddress().toString();
-							k++;
-						}
-					}
-					userList.setListData(users);
-
-					// Forces the scroll pane to actually scroll to the bottom
-					// when new data is put in
-					output.setCaretPosition(output.getDocument().getLength());
-					if (messages.size() > 0) {
-						for (int i = 0; i < messages.size(); i++) {
-							output.append(messages.get(i));
-							output.append("\n");
-						}
-						initializer.resetMessages();
-					}
-					if (clicked) {
-						if (message.getText().equalsIgnoreCase("/bye")) {
-							workerGroup.shutdownGracefully();
-							message.setText("");
-							clicked = false;
-							System.exit(0);
-						} else if (!message.getText().equals("")) {
-							output.append(message.getText() + "\r\n");
-							for (Channel channel : ChatroomServerHandler
-									.getChannels()) {
-								channel.writeAndFlush("[SERVER] : "
-										+ message.getText() + "\r\n");
-							}
-							message.setText("");
-							clicked = false;
-						}
-					}
-					if (exit) {
-						break;
-					}
-				}
-
-				// Wait until the server socket is closed.
-				f.channel().closeFuture().sync();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} finally {
-				workerGroup.shutdownGracefully();
-				bossGroup.shutdownGracefully();
-			}
-		}
-	};
 	
 	/**
      * createGUI()
@@ -181,7 +150,8 @@ public class ChatroomServer extends Server {
 		sendButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				clicked = true;
+				sendMessage(message.getText());
+				message.setText("");
 			}
 			
 		});
@@ -190,7 +160,8 @@ public class ChatroomServer extends Server {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				if(arg0.getActionCommand().equals("Enter")) {
-					clicked = true;
+					sendMessage(message.getText());
+					message.setText("");
 				}
 			}
 		});
@@ -234,7 +205,7 @@ public class ChatroomServer extends Server {
 	}
 
     public static void main(String[] args) throws Exception {
-    	new ChatroomServer(8080).run();
+    	new ChatroomServer(8080).setUp();
     }
 
 }

@@ -6,6 +6,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+import util.MessageEvent;
+
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
+
 /**
  * Base class for all Clients.
  * @author Mike
@@ -26,6 +31,8 @@ public abstract class Client {
 	protected String host;
 	protected int port;
 	
+	protected EventBus incomingMessageEventBus;
+	
 	/**
 	 * Base Client constructor.
 	 * @author Mike
@@ -33,6 +40,7 @@ public abstract class Client {
 	public Client(String host, int port) {
 		this.host = host;
 		this.port = port;
+		incomingMessageEventBus = new EventBus();
 	}
 	
 	/**
@@ -77,6 +85,11 @@ public abstract class Client {
 	 */
 	public JTextArea getOutput() {
 		return output;
+	}
+	
+	@Subscribe
+	public void handleMessageEvent(MessageEvent e) {
+		this.append(e.getMessage());
 	}
 	
 }

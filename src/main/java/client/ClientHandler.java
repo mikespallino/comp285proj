@@ -3,10 +3,11 @@ package client;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.ChannelHandler.Sharable;
 
-import java.awt.event.ActionListener;
-import java.beans.EventHandler;
 import java.util.ArrayList;
+
+import util.MessageEvent;
 
 /**
  * ClientHandler implementation
@@ -90,8 +91,28 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 			for(int i = 0; i < userList.size(); i++) {
 				System.out.println(userList.get(i));
 			}
+		} else if(message.indexOf("[P2P]") != -1) {
+			String peerAddress = message.substring(13,message.indexOf("]",13));
+			System.out.println("setUp (loop):: peerAddress: "+ peerAddress);
+			String msg = message.substring(message.indexOf(":",message.indexOf("TO")) + 1);
+			if(client instanceof ChatroomClient) {
+				ChatroomClient client2 = (ChatroomClient) client;
+				boolean newP2P = true;
+				for (int i = 0; i < client2.getP2PClients().size(); i++) {
+					if (peerAddress.equals(client2.getP2PClients().get(i).getHost())) {
+						newP2P = false;
+						client2.getP2PClients().get(i).incomingMessageEventBus.post(new MessageEvent("[PEER] : " + msg));
+					}
+				}
+				if (newP2P) {
+					client2.getP2PClients().add(new P2PClient(peerAddress, client2));
+					client2.getP2PClients().get(client2.getP2PClients().size() - 1).incomingMessageEventBus.post(new MessageEvent("[PEER] : " + msg));
+					newP2P = false;
+				}
+				resetMessage();
+			}
 		}
-		EventHandler.create(ActionListener.class, client, "actionPerformed", "");
+		client.incomingMessageEventBus.post(new MessageEvent(this.message));
 		System.out.println("channelRead0:: Message: " + message);
 	}
 
@@ -114,6 +135,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
 	@Override
 	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
 		message = "The server shut down.";
+		client.incomingMessageEventBus.post(new MessageEvent(this.message));
 		server = null;
 	}
 	

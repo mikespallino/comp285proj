@@ -2,6 +2,7 @@ package client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -17,6 +18,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
@@ -41,17 +44,17 @@ import javax.swing.event.ListSelectionListener;
  * Sets up connections to the main chat room.
  * @author Mike
  */
-public class ChatroomClient extends Client implements ActionListener {
+public class ChatroomClient extends Client {
 	
-	private boolean clicked = false;
+	private EventLoopGroup workerGroup;
 	private Channel channel;
 	private JList<String> userList;
 	private DefaultListModel<String> list = new DefaultListModel<String>();
-	ArrayList<P2PClient> p2pClients = new ArrayList<>();
+	private ArrayList<P2PClient> p2pClients = new ArrayList<>();
 	
 	private static String host;
 	private static Integer port;
-	private static volatile boolean ready = false;
+	private static boolean ready = false;
 	
 	public ChatroomClient(String host, int port) throws Exception {
 		super(host, port);
@@ -64,12 +67,14 @@ public class ChatroomClient extends Client implements ActionListener {
     	mainWindow();
     	try {
     		while(true) {
-    			if(ready)
+    			Thread.sleep(1000);
+    			if(ready) {
     				break;
+    			}
     		}
-    		
     		if(host != null && port != null) {
-    			new ChatroomClient(host, port).setUp();
+    			ChatroomClient c = new ChatroomClient(host, port);
+    			c.setUp();
     		} else {
     			System.err.println("Specify a valid host and port.");
     		}
@@ -78,7 +83,24 @@ public class ChatroomClient extends Client implements ActionListener {
 		}
     }
     
-    /**
+    private boolean update(String[] users) throws InterruptedException {
+    	Thread.sleep(1000);
+		if(!channel.isOpen()) {
+			return false;
+		}
+		for(int i = 0; i < p2pClients.size(); i++) {
+			if(p2pClients.get(i) != null) {
+				if(!p2pClients.get(i).frame.isVisible()) {
+					p2pClients.remove(i);
+				}
+			}
+		}
+		output.setCaretPosition(output.getDocument().getLength());
+		updateList(users);
+		return true;
+	}
+
+	/**
      * mainWindow()
      * Creates the initial window that allows the user to choose a host IP and port number.
      * @author Mike
@@ -149,7 +171,7 @@ public class ChatroomClient extends Client implements ActionListener {
      * @author Mike
      */
 	private void setUp() {
-		EventLoopGroup workerGroup = new NioEventLoopGroup();
+		workerGroup = new NioEventLoopGroup();
 		try {
 			Bootstrap b = new Bootstrap();
 			final ClientHandler handler = new ClientHandler(this);
@@ -167,86 +189,17 @@ public class ChatroomClient extends Client implements ActionListener {
 				}
 			});
 
+			incomingMessageEventBus.register(this);
 			// Start the client.
 			channel = b.connect(host, port).sync().channel();
-			boolean firstRun = true;
-			while (true) {
-				if (firstRun) {
-					output.append("Welcome to MAD Chat!\nServer: " + handler.getServer().remoteAddress() + "\n");
-					firstRun = false;
-				}
-				// Forces the scroll pane to actually scroll to the bottom
-				// when new data is put in
-				output.setCaretPosition(output.getDocument().getLength());
-				if (handler.getMessage() != null && !handler.getMessage().equals("")) {
-					// send message as usual
-					if (handler.getMessage().indexOf("[P2P]") == -1) {
-						if(handler.getMessage().indexOf("UPDATE LIST") != -1) {
-							updateList(ClientHandler.getUsers());
-						} else {
-							output.append(handler.getMessage() + "\n");
-							System.out.println("setUp (loop):: message: "+ handler.getMessage());
-						}
-						handler.resetMessage();
-					} else {
-						// send message to P2P window
-						boolean newP2P = true;
-						System.out.println(handler.getMessage());
-						String peerAddress = handler.getMessage().substring(13,handler.getMessage().indexOf("]",13));
-						System.out.println("setUp (loop):: peerAddress: "+ peerAddress);
-						String msg = handler.getMessage().substring(handler.getMessage().indexOf(":",handler.getMessage().indexOf("TO")) + 1);
-						for (int i = 0; i < p2pClients.size(); i++) {
-							if (peerAddress.equals(p2pClients.get(i).getHost())) {
-								newP2P = false;
-								p2pClients.get(i).append("[PEER] : " + msg);
-							}
-						}
-						if (newP2P) {
-							System.out.println("setUp (loop):: Starting client.");
-							p2pClients.add(new P2PClient(peerAddress, getParent()));
-							p2pClients.get(p2pClients.size() - 1).append("[PEER] : " + msg);
-							newP2P = false;
-						}
-						handler.resetMessage();
-					}
-				}
-				// update list
-				updateList(ClientHandler.getUsers());
-				
-				for(int i = 0; i < p2pClients.size(); i++) {
-					if(p2pClients.get(i) != null) {
-						if(!p2pClients.get(i).frame.isVisible()) {
-							p2pClients.remove(i);
-						}
-					}
-				}
-				// send data
-				if (clicked) {
-					if (message.getText().equalsIgnoreCase("/bye")) {
-						workerGroup.shutdownGracefully();
-						message.setText("");
-						System.exit(0);
-					} else if (!message.getText().equals("")) {
-						System.out.println(1);
-						sendMessage(message.getText());
-						message.setText("");
-						clicked = false;
-					}
-				}
-			}
+			output.append("Welcome to MAD Chat!\nServer: " + handler.getServer().remoteAddress() + "\n");
+			while(update(ClientHandler.getUsers())) { }
 		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally {
+		}  finally {
 			workerGroup.shutdownGracefully();
 		}
-	}
-
-	/**
-	 * getParent()
-	 * @return a reference to this ChatroomClient object.
-	 */
-	private ChatroomClient getParent() {
-		return this;
 	}
 	
     /**
@@ -258,6 +211,9 @@ public class ChatroomClient extends Client implements ActionListener {
     public void sendMessage(String message) {
     	if(message.equals("")) {
     		System.out.println("Error: Trying to write the empty string.");
+    	} else if(message.equals("/bye")){
+    		workerGroup.shutdownGracefully();
+    		System.exit(0);
     	} else {
     		channel.writeAndFlush(message + "\r\n");
     	}
@@ -345,7 +301,8 @@ public class ChatroomClient extends Client implements ActionListener {
 		sendButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				clicked = true;
+				sendMessage(message.getText());
+				message.setText("");
 			}
 			
 		});
@@ -353,9 +310,8 @@ public class ChatroomClient extends Client implements ActionListener {
 		message.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				if(arg0.getActionCommand().equals("Enter")) {
-					clicked = true;
-				}
+				sendMessage(message.getText());
+				message.setText("");
 			}
 		});
 		
@@ -393,7 +349,7 @@ public class ChatroomClient extends Client implements ActionListener {
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 	}
-	
+
 	/**
 	 * Update the list of users from the server.
 	 * @param users - User List from the server.
@@ -461,11 +417,6 @@ public class ChatroomClient extends Client implements ActionListener {
 	 */
 	public ArrayList<P2PClient> getP2PClients() {
 		return p2pClients;
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		System.out.println("CALLED: " + e.getActionCommand());
 	}
 	
 }

@@ -51,6 +51,6 @@ public abstract class Server {
 	
 	@Subscribe
 	public void handleMessageEvent(MessageEvent e) {
-		output.append(e.getMessage());
+		output.append(e.getMessage() + "\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r");
 	}
 }

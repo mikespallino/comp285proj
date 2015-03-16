@@ -11,7 +11,13 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Map;
 
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
@@ -111,6 +117,36 @@ public class ChatroomServer extends Server {
 			workerGroup.shutdownGracefully();
 			bossGroup.shutdownGracefully();
 			System.exit(0);
+		} else if(message.startsWith("/kick")) {
+			output.append(message + "\r\n");
+			System.out.println(message);
+			String user = message.substring(6);
+			System.out.println(user);
+			Map<Channel, String> users = ChatroomServerHandler.getUserMap();
+			for(Channel c: users.keySet()) {
+				System.out.println(c.remoteAddress().toString());
+				if(c.remoteAddress().toString().equals(user) || users.get(c).equals(user)) {
+					ChatroomServerHandler.kick(c);
+				}
+			}
+
+		} else if (message.startsWith("/log")) {
+			try {
+				File outputFile = new File("logs/server_log.txt");
+				if(!outputFile.exists()) {
+					outputFile.createNewFile();
+				}
+				FileWriter fout = new FileWriter(outputFile, true);
+				BufferedWriter writer = new BufferedWriter(fout);
+				Date date= new Date();
+				String log = date.toString() + "\n\r\n\r" + output.getText() + "\n\r\n\r";
+				output.setText("");
+				writer.append(log);
+				writer.close();
+				fout.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		} else if (!message.equals("")) {
 			output.append(message + "\r\n");
 			for (Channel channel : ChatroomServerHandler.getChannels()) {
@@ -136,8 +172,6 @@ public class ChatroomServer extends Server {
 		message.setActionCommand("Enter");
 		sendButton = new JButton("Send");
 		userList = new JList<String>();
-		String[] userListData = {"test", "test1", "test3"};
-		userList.setListData(userListData);
 		
 		frame = new JFrame("MAD Chat - SERVER");
 		JPanel panel = new JPanel();
@@ -165,6 +199,27 @@ public class ChatroomServer extends Server {
 				}
 			}
 		});
+		
+//		final PopupMenu kickMenu = new PopupMenu();
+//		kickMenu.add(new MenuItem("Kick User"));
+//		userList.add(kickMenu);
+//		
+//		userList.addListSelectionListener(new ListSelectionListener() {
+//
+//			@Override
+//			public void valueChanged(ListSelectionEvent arg0) {
+//				if(arg0.getValueIsAdjusting() == false) {
+//					if(arg0.getSource() instanceof MouseEvent) {
+//						MouseEvent e = (MouseEvent) arg0.getSource();
+//						if(e.getButton() == MouseEvent.BUTTON2) {
+//							kickMenu.show(userList, e.getX(), e.getY());
+//							System.out.println("called");
+//						}
+//					}
+//				}
+//			}
+//			
+//		});
 		
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(600, 400);

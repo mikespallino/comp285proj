@@ -89,7 +89,9 @@ public abstract class Client {
 	
 	@Subscribe
 	public void handleMessageEvent(MessageEvent e) {
-		this.append(e.getMessage());
+		if(!e.getMessage().equals("")) {
+			this.append(e.getMessage());
+		}
 	}
 	
 }

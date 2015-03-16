@@ -72,6 +72,7 @@ public class ChatroomServerHandler extends ServerHandler {
 			System.out.println("Error: Wrote empty string. " + ctx.channel());
 		} else {
 			if(message.startsWith("/nick")) {
+				this.message = "[" + ctx.channel().remoteAddress() + "] has changed their nickname to : " + message.substring(6);
 				String name = message.substring(message.indexOf(" ") + 1);
 				if(!users.containsValue(name)) {
 					users.replace(ctx.channel(), name);
@@ -162,6 +163,23 @@ public class ChatroomServerHandler extends ServerHandler {
 			}
 		}
 		return temp;
+	}
+	
+	public static Map<Channel, String> getUserMap() {
+		return users;
+	}
+	
+	public static void kick(Channel c) {
+		for(Channel user: channels) {
+			if(user.equals(c)) {
+				user.writeAndFlush("You are being kicked!\r\n");
+			} else {
+				user.writeAndFlush("[" + c.remoteAddress() + "] is being kicked!\r\n");
+			}
+		}
+		c.disconnect();
+		channels.remove(c);
+		users.remove(c);
 	}
 	
 }

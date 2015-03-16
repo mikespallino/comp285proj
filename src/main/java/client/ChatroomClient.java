@@ -156,7 +156,6 @@ public class ChatroomClient extends Client {
 		portNumber.addKeyListener(new KeyListener() {
 			@Override
 			public void keyPressed(KeyEvent arg0) {
-				System.out.println("called " + arg0.getKeyCode() + " " + KeyEvent.VK_ENTER);
 				if(arg0.getKeyCode() == KeyEvent.VK_ENTER) {
 					host = hostName.getText();
 					port = new Integer(portNumber.getText());

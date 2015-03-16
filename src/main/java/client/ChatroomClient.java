@@ -2,7 +2,6 @@ package client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -18,8 +17,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
@@ -152,6 +151,23 @@ public class ChatroomClient extends Client {
 					frame.dispose();
 				}
 			}
+		});
+		
+		portNumber.addKeyListener(new KeyListener() {
+			@Override
+			public void keyPressed(KeyEvent arg0) {
+				System.out.println("called " + arg0.getKeyCode() + " " + KeyEvent.VK_ENTER);
+				if(arg0.getKeyCode() == KeyEvent.VK_ENTER) {
+					host = hostName.getText();
+					port = new Integer(portNumber.getText());
+					ready = true;
+					frame.dispose();
+				}
+			}
+			@Override
+			public void keyReleased(KeyEvent arg0) {}
+			@Override
+			public void keyTyped(KeyEvent arg0) {}
 		});
 		
     	frame.setSize(200,100);

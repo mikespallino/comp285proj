@@ -7,6 +7,9 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.util.HashMap;
+import java.util.Map;
+
+import util.MessageEvent;
 
 /**
  * ChatroomServerHandler
@@ -16,7 +19,7 @@ import java.util.HashMap;
  */
 public class ChatroomServerHandler extends ServerHandler {
 
-	private static HashMap<Channel, String> users = new HashMap<>();
+	private static Map<Channel, String> users = new HashMap<>();
 	private static final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 	private String message = "";
 	
@@ -112,6 +115,7 @@ public class ChatroomServerHandler extends ServerHandler {
 				}
 			}
 		}
+		ChatroomServer.messageBus.register(new MessageEvent(this.message));
 		System.out.println("channelRead0 (end):: " + message);
 	}
 
